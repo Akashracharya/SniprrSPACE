@@ -1,14 +1,28 @@
 :root {
+    /* --- COLORS --- */
     --bg-deep: #0b0c15;
     --bg-panel: #13141f;
     --bg-glass: rgba(30, 30, 45, 0.7);
+    --bg-hover: rgba(255, 255, 255, 0.05);
+    --bg-active: rgba(255, 255, 255, 0.1);
+    --bg-overlay: rgba(0, 0, 0, 0.8);
+
+    /* --- ACCENTS --- */
     --accent-sfx: #00e5ff; /* Cyan */
-    --accent-gfx: #ff0055; /* Magenta */
-    --accent-vfx: #adff02; /* Lime */
-    --accent-pre: #bd00ff; /* Purple */
+    --accent-gfx: #00e5ff; /* Magenta */
+    --accent-vfx: #00e5ff; /* Lime */
+    --accent-pre: #00e5ff; /* Purple */
+
+    /* --- TEXT --- */
     --text-main: #ffffff;
     --text-muted: #7aa;
-    --border: rgba(255,255,255,0.1);
+    --text-dim: #cccccc;
+
+    /* --- UI ELEMENTS --- */
+    --border: rgba(255, 255, 255, 0.1);
+    --scrollbar-thumb: #333333;
+    --radius-std: 8px;
+    --radius-pill: 15px;
 }
 
 body {
@@ -27,7 +41,7 @@ body {
     height: 100%;
 }
 
-/* TOP BAR */
+/* --- TOP BAR --- */
 .top-bar {
     height: 50px;
     background: var(--bg-panel);
@@ -35,60 +49,91 @@ body {
     align-items: center;
     padding: 0 15px;
     border-bottom: 1px solid var(--border);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     z-index: 10;
 }
 
-.brand { font-weight: 800; letter-spacing: 1px; margin-right: 30px; }
-.brand span { color: var(--accent-sfx); }
+.brand {
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-right: 30px;
+}
 
-.nav-tabs { display: flex; gap: 5px; }
+.brand span {
+    color: var(--accent-sfx);
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 8px;
+}
+
 .tab-btn {
     padding: 6px 15px;
     cursor: pointer;
     font-size: 12px;
     font-weight: bold;
-    border-radius: 4px;
+    border-radius: var(--radius-pill);
     transition: 0.3s;
     color: var(--text-muted);
+    user-select: none;
 }
-.tab-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-.tab-btn.active { background: var(--text-main); color: var(--bg-deep); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
 
-/* LAYOUT */
+.tab-btn:hover {
+    background: var(--bg-active);
+    color: var(--text-main);
+}
+
+.tab-btn.active {
+    background: var(--text-main);
+    color: var(--bg-deep);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* --- LAYOUT STRUCTURE --- */
 .content-area {
     display: flex;
     flex: 1;
     overflow: hidden;
 }
 
-/* SIDEBAR */
+/* --- SIDEBAR --- */
 .sidebar {
-    width: 130px;
+    width: 100px;
     background: var(--bg-glass);
     backdrop-filter: blur(10px);
     border-right: 1px solid var(--border);
-    padding: 10px 0;
+    padding: 7px;
     overflow-y: auto;
 }
 
 .sub-folder-btn {
-    padding: 12px 15px;
-    font-size: 11px;
+    user-select: none;
+    padding: 10px 15px;
+    font-size: 12px;
     cursor: pointer;
-    color: #ccc;
+    color: var(--text-dim);
     text-transform: capitalize;
     transition: 0.2s;
-    border-left: 3px solid transparent;
-}
-.sub-folder-btn:hover { background: rgba(255,255,255,0.05); color: white; }
-.sub-folder-btn.active {
-    background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
-    color: white;
-    border-left-color: var(--accent-sfx); /* Default, changes via JS */
+    
+    /* Rounded Button Styling */
+    border-radius: 6px; 
+    margin-bottom: 4px; /* Space between buttons */
+    border: none; /* Removed the left colored border */
 }
 
-/* MAIN GRID */
+.sub-folder-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+}
+
+.sub-folder-btn.active {
+    background: var(--bg-active); /* Simple highlighted background */
+    color: var(--text-main);
+    font-weight: bold;
+}
+
+/* --- MAIN GRID CONTAINER --- */
 .grid-container {
     flex: 1;
     display: flex;
@@ -96,27 +141,56 @@ body {
     padding: 10px;
     overflow-y: hidden;
 }
-.info-bar { font-size: 10px; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
 
+.info-bar {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    user-select: none;
+}
+
+/* --- GRID & LAYOUTS --- */
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 10px;
     overflow-y: auto;
     height: 100%;
     padding-bottom: 20px;
+    align-content: start; /* Packs items to the top */
+    /* Default Fallback */
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 }
 
-/* CARDS */
+/* Layout: Gallery (GFX, VFX, PRESETS) - 2 Columns */
+.grid.layout-gallery {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Layout: List (SFX) - Full Width */
+.grid.layout-list {
+    grid-template-columns: 1fr;
+    
+    /* --- ADD THESE 3 LINES --- */
+    grid-auto-rows: min-content; /* Forces the row height to snap to the card height (32px) */
+          /* Packs all items to the top, preventing vertical spreading */
+             /* Allows grid to grow with content instead of forcing 100% height */
+    
+    gap: 9px;
+}
+
+/* --- ASSET CARDS --- */
 .asset-card {
     background: var(--bg-panel);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    height: 90px;
+    border-radius: var(--radius-std);
+    height: 130px;
     position: relative;
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s, border-color 0.2s;
+    user-select: none;
 }
 
 .asset-card:hover {
@@ -125,6 +199,23 @@ body {
     z-index: 2;
 }
 
+/* List View Overrides for Cards */
+.grid.layout-list .asset-card {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 40px;
+}
+
+/* List View Hover Override (Disable 'pop up' effect) */
+.grid.layout-list .asset-card:hover {
+    transform: none;
+    background: var(--bg-hover);
+    border-color: var(--accent-sfx);
+}
+
+/* --- CARD CONTENT --- */
 .card-media {
     width: 100%;
     height: 100%;
@@ -132,13 +223,16 @@ body {
     opacity: 0.6;
     transition: opacity 0.3s;
 }
-.asset-card:hover .card-media { opacity: 1; }
+
+.asset-card:hover .card-media {
+    opacity: 1;
+}
 
 .card-label {
     position: absolute;
     bottom: 0;
     width: 100%;
-    background: rgba(0,0,0,0.8);
+    background: var(--bg-overlay);
     font-size: 10px;
     padding: 4px;
     text-align: center;
@@ -148,21 +242,54 @@ body {
     pointer-events: none;
 }
 
-/* PRESET SPECIFIC */
-.asset-card.preset-card .card-media {
-    /* Hide video until hover */
-    display: none; 
+/* List View Label Overrides */
+.grid.layout-list .card-label {
+    position: static;
+    width: auto;
+    background: transparent;
+    padding: 0;
+    text-align: left;
+    font-size: 12px;
 }
+
+/* --- PRESETS SPECIAL HANDLING --- */
+.asset-card.preset-card .card-media {
+    display: none;
+}
+
 .asset-card.preset-card:hover .card-media {
     display: block;
 }
+
 .preset-placeholder {
-    width: 100%; height: 100%;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 24px; color: #444;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    color: #444;
 }
 
-/* SCROLLBAR */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+/* List View Placeholder Overrides */
+.grid.layout-list .preset-placeholder {
+    width: 24px;
+    height: auto;
+    font-size: 14px;
+    margin-right: 10px;
+    justify-content: flex-start;
+}
+
+/* --- SCROLLBAR --- */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+}

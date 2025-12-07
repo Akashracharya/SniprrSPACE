@@ -9,9 +9,9 @@ const assetsRoot = path.join(extensionRoot, 'assets');
 // Valid extensions per tab
 const TAB_CONFIG = {
     'SFX': { types: ['.wav', '.mp3', '.aiff'], color: '#00e5ff', isPreset: false },
-    'GFX': { types: ['.mov', '.mp4', '.png'], color: '#ff0055', isPreset: false },
-    'VFX': { types: ['.mov', '.mp4'], color: '#adff02', isPreset: false },
-    'PRESETS': { types: ['.ffx'], color: '#bd00ff', isPreset: true }
+    'GFX': { types: ['.mov', '.mp4', '.png'], color: '#00e5ff', isPreset: false },
+    'VFX': { types: ['.mov', '.mp4'], color: '#00e5ff', isPreset: false },
+    'PRESETS': { types: ['.ffx'], color: '#00e5ff', isPreset: true }
 };
 
 let activeTab = 'SFX';
@@ -77,8 +77,18 @@ function loadSidebar(tabName) {
 }
 
 // 3. LOAD GRID (The Assets)
+// 3. LOAD GRID (The Assets)
 function loadGrid(tabName, category) {
     const grid = document.getElementById('assetGrid');
+    
+    // ... (Your layout switching logic from previous steps) ...
+    grid.className = 'grid'; 
+    if (tabName === 'SFX') {
+        grid.classList.add('layout-list');
+    } else {
+        grid.classList.add('layout-gallery');
+    }
+
     const display = document.getElementById('currentPathDisplay');
     const folderPath = path.join(assetsRoot, tabName, category);
     const config = TAB_CONFIG[tabName];
@@ -90,7 +100,6 @@ function loadGrid(tabName, category) {
     fs.readdir(folderPath, (err, files) => {
         if (err) return;
 
-        // Filter files based on current Tab's allowed extensions
         const validFiles = files.filter(file => {
             return config.types.includes(path.extname(file).toLowerCase());
         });
@@ -109,7 +118,6 @@ function loadGrid(tabName, category) {
                     <div class="preset-placeholder" style="color:${config.color}">🔊</div>
                     <div class="card-label">${file}</div>
                 `;
-                // Hover: Play Audio
                 card.onmouseenter = () => playAudio(fullPath);
                 card.onmouseleave = () => stopAudio();
             }
@@ -122,23 +130,33 @@ function loadGrid(tabName, category) {
                         <video class="card-media" src="${fullPath}" loop muted></video>
                         <div class="card-label">${file}</div>
                     `;
-                    // Hover: Play Video
-                    card.onmouseenter = () => { card.querySelector('video').play(); };
-                    card.onmouseleave = () => { card.querySelector('video').pause(); };
+                    
+                    const vid = card.querySelector('video');
+                    
+                    // 1. SET THUMBNAIL TO MIDDLE
+                    vid.onloadedmetadata = () => {
+                        vid.currentTime = vid.duration / 2;
+                    };
+
+                    // 2. HOVER BEHAVIOR
+                    card.onmouseenter = () => { 
+                        vid.play(); 
+                    };
+                    card.onmouseleave = () => { 
+                        vid.pause(); 
+                        vid.currentTime = vid.duration / 2; // Snap back to middle
+                    };
                 } else {
                     card.innerHTML = `<img class="card-media" src="${fullPath}"> <div class="card-label">${file}</div>`;
                 }
             }
 
-            // PRESETS: Special Logic (Find sibling video)
+            // PRESETS: Special Logic
             else if (tabName === 'PRESETS') {
-                // Look for a file with same name but .mp4 extension
                 const previewPath = fullPath.replace('.ffx', '.mp4');
-                
-                // We use a placeholder icon by default
                 let html = `<div class="preset-placeholder">✨</div>`;
                 
-                // If preview exists (we assume it does based on your rules), inject video tag
+                // Check if preview video exists
                 if (fs.existsSync(previewPath)) {
                    html = `
                         <div class="preset-placeholder">✨</div>
@@ -150,15 +168,23 @@ function loadGrid(tabName, category) {
                 }
                 card.innerHTML = html;
 
-                // Hover: Play Preview
-                card.onmouseenter = () => { 
-                    const vid = card.querySelector('video');
-                    if(vid) vid.play();
-                };
-                card.onmouseleave = () => { 
-                    const vid = card.querySelector('video');
-                    if(vid) { vid.pause(); vid.currentTime = 0; }
-                };
+                // Video Logic (if exists)
+                const vid = card.querySelector('video');
+                if (vid) {
+                    // 1. SET THUMBNAIL TO MIDDLE
+                    vid.onloadedmetadata = () => {
+                        vid.currentTime = vid.duration / 2;
+                    };
+
+                    // 2. HOVER BEHAVIOR
+                    card.onmouseenter = () => { 
+                        vid.play();
+                    };
+                    card.onmouseleave = () => { 
+                        vid.pause(); 
+                        vid.currentTime = vid.duration / 2; // Snap back to middle
+                    };
+                }
             }
 
             // --- DOUBLE CLICK ACTION ---

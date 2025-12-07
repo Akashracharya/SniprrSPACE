@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SniprrSPACE</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <header class="top-bar">
+            <div class="brand">Sniprr<span>SPACE</span></div>
+            <nav class="nav-tabs">
+                <div class="tab-btn active" data-tab="SFX">SFX</div>
+                <div class="tab-btn" data-tab="GFX">GFX</div>
+                <div class="tab-btn" data-tab="VFX">VFX</div>
+                <div class="tab-btn" data-tab="PRESETS">PRESETS</div>
+            </nav>
+        </header>
+
+        <div class="content-area">
+            <aside class="sidebar" id="subFolderList">
+                </aside>
+
+            <main class="grid-container">
+                <div class="info-bar" id="currentPathDisplay">Select a folder...</div>
+                <div class="grid" id="assetGrid">
+                    </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="video-preview-layer" class="hidden"></div>
+
+    <script src="lib/CSInterface.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

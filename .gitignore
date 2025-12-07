@@ -1,0 +1,40 @@
+# --- System Junk ---
+.DS_Store
+Thumbs.db
+*.log
+
+# --- Dependencies ---
+node_modules/
+package-lock.json
+
+# --- Local Development Secrets ---
+# Crucial: Do not upload the debug file to public repos
+.debug
+
+# --- ASSETS (The Heavy Stuff) ---
+# We ignore these file types so your Git stays fast.
+# This keeps the folders, but ignores the big files inside them.
+
+# Audio
+assets/**/*.mp3
+assets/**/*.wav
+assets/**/*.aiff
+assets/**/*.m4a
+
+# Video
+assets/**/*.mp4
+assets/**/*.mov
+assets/**/*.avi
+
+# Images
+assets/**/*.png
+assets/**/*.jpg
+assets/**/*.jpeg
+
+# After Effects Specific
+assets/**/*.ffx
+assets/**/*.aep
+
+# --- Optional: Ignore the entire assets folder ---
+# Uncomment the line below if you want to ignore EVERYTHING in assets
+# assets/

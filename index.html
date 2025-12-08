@@ -13,24 +13,67 @@
             <nav class="nav-tabs">
                 <div class="tab-btn active" data-tab="SFX">SFX</div>
                 <div class="tab-btn" data-tab="GFX">GFX</div>
-                <div class="tab-btn" data-tab="VFX">VFX</div>
                 <div class="tab-btn" data-tab="PRESETS">PRESETS</div>
+                <div class="tab-btn special-tab" data-tab="MAIN">MAIN</div>
             </nav>
         </header>
 
-        <div class="content-area">
-            <aside class="sidebar" id="subFolderList">
-                </aside>
-
+        <div class="content-area" id="browserView">
+            <aside class="sidebar" id="subFolderList"></aside>
             <main class="grid-container">
                 <div class="info-bar" id="currentPathDisplay">Select a folder...</div>
-                <div class="grid" id="assetGrid">
-                    </div>
+                <div class="grid" id="assetGrid"></div>
             </main>
         </div>
-    </div>
 
-    <div id="video-preview-layer" class="hidden"></div>
+        <div class="tools-view hidden" id="toolsView">
+            
+            <div class="compact-grid">
+                
+                <button class="tool-btn" onclick="runScript('createLayer', 'adjustment')">ADJ</button>
+                <button class="tool-btn" onclick="runScript('createLayer', 'null')">NULL</button>
+                <button class="tool-btn" onclick="runScript('createLayer', 'camera')">CAM</button>
+                <button class="tool-btn" onclick="runScript('createLayer', 'text')">TEXT</button>
+
+                <button class="tool-btn" id="btnSolid">SOLID</button>
+                <button class="tool-btn" onclick="runScript('fitToComp')">FIT</button>
+            </div>
+
+            <button class="tool-btn full-width-btn" id="btnPrecompose">
+                PRE-COMP
+            </button>
+
+            <div class="anchor-section">
+                <div class="anchor-grid">
+                    <button class="anchor-btn tl" onclick="runScript('setAnchorPoint', 0)"></button>
+                    <button class="anchor-btn tm" onclick="runScript('setAnchorPoint', 1)"></button>
+                    <button class="anchor-btn tr" onclick="runScript('setAnchorPoint', 2)"></button>
+                    <button class="anchor-btn ml" onclick="runScript('setAnchorPoint', 3)"></button>
+                    <button class="anchor-btn mm" onclick="runScript('setAnchorPoint', 4)"></button>
+                    <button class="anchor-btn mr" onclick="runScript('setAnchorPoint', 5)"></button>
+                    <button class="anchor-btn bl" onclick="runScript('setAnchorPoint', 6)"></button>
+                    <button class="anchor-btn bm" onclick="runScript('setAnchorPoint', 7)"></button>
+                    <button class="anchor-btn br" onclick="runScript('setAnchorPoint', 8)"></button>
+                </div>
+            </div>
+
+            <div id="colorModal" class="color-modal hidden">
+                <div class="color-grid">
+                    <div class="color-swatch" style="background:#FFFFFF" data-col="#FFFFFF"></div>
+                    <div class="color-swatch" style="background:#000000" data-col="#000000"></div>
+                    <div class="color-swatch" style="background:#808080" data-col="#808080"></div>
+                    <div class="color-swatch" style="background:#FF0000" data-col="#FF0000"></div>
+                    <div class="color-swatch" style="background:#00FF00" data-col="#00FF00"></div>
+                    <div class="color-swatch" style="background:#0000FF" data-col="#0000FF"></div>
+                    <div class="color-swatch" style="background:#FFFF00" data-col="#FFFF00"></div>
+                    <div class="color-swatch" style="background:#00FFFF" data-col="#00FFFF"></div>
+                    <div class="color-swatch" style="background:#FF00FF" data-col="#FF00FF"></div>
+                </div>
+                <div class="modal-close" id="closeModal">Cancel</div>
+            </div>
+
+        </div>
+    </div>
 
     <script src="lib/CSInterface.js"></script>
     <script src="js/main.js"></script>

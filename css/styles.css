@@ -9,9 +9,10 @@
 
     /* --- ACCENTS --- */
     --accent-sfx: #00e5ff; /* Cyan */
-    --accent-gfx: #00e5ff; /* Magenta */
+    --accent-gfx: #ff0055; /* Magenta */
     --accent-vfx: #00e5ff; /* Lime */
-    --accent-pre: #00e5ff; /* Purple */
+    --accent-pre: #9d00ff; /* Purple */
+    --accent-main: #ffffff; /* White for Main tools */
 
     /* --- TEXT --- */
     --text-main: #ffffff;
@@ -39,6 +40,11 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
+}
+
+/* --- UTILITIES --- */
+.hidden {
+    display: none !important;
 }
 
 /* --- TOP BAR --- */
@@ -97,7 +103,163 @@ body {
     overflow: hidden;
 }
 
-/* --- SIDEBAR --- */
+/* --- MAIN TOOLS VIEW (New for Main Tab) --- */
+.tools-view {
+    flex: 1;
+    background: var(--bg-deep);
+    padding: 15px;
+    overflow-y: hidden; /* Prevent scrolling for tools */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Compact Grid for Tools */
+.compact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 buttons per row */
+    gap: 8px;
+    width: 100%;
+}
+
+/* Tool Buttons */
+.tool-btn {
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 10px 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: 0.2s;
+    text-align: center;
+    user-select: none;
+}
+
+.tool-btn:hover {
+    background: var(--text-main);
+    color: var(--bg-deep);
+    border-color: var(--text-main);
+}
+
+.tool-btn:active {
+    transform: scale(0.98);
+}
+
+/* Full Width Button (Pre-compose) */
+.full-width-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+}
+
+/* --- ANCHOR POINT TOOLS --- */
+.anchor-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px; 
+    padding: 15px 0;
+    border-top: 1px solid var(--border);
+    width: 100%;
+}
+
+.anchor-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 30px);
+    grid-template-rows: repeat(3, 30px);
+    gap: 6px; /* Slightly larger gap for easier clicking */
+}
+
+.anchor-btn {
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: 0.2s all;
+}
+
+.anchor-btn:hover {
+    background: var(--accent-sfx);
+    border-color: var(--accent-sfx);
+    transform: scale(1.1);
+    z-index: 10;
+}
+
+/* Center Dot Indicator */
+.anchor-btn::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #888;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none; /* Crucial: lets clicks pass through to button */
+}
+
+.anchor-btn:hover::after {
+    background: #000;
+}
+
+/* --- COLOR PICKER MODAL --- */
+.color-modal {
+    position: absolute;
+    top: 50px; /* Below header */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(11, 12, 21, 0.95);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 50px);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.color-swatch {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.color-swatch:hover {
+    transform: scale(1.15);
+    border-color: #fff;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
+
+.modal-close {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-decoration: underline;
+    margin-top: 10px;
+}
+
+.modal-close:hover {
+    color: #fff;
+}
+
+/* --- SIDEBAR (Asset Browser) --- */
 .sidebar {
     width: 100px;
     background: var(--bg-glass);
@@ -115,11 +277,9 @@ body {
     color: var(--text-dim);
     text-transform: capitalize;
     transition: 0.2s;
-    
-    /* Rounded Button Styling */
     border-radius: 6px; 
-    margin-bottom: 4px; /* Space between buttons */
-    border: none; /* Removed the left colored border */
+    margin-bottom: 4px;
+    border: none;
 }
 
 .sub-folder-btn:hover {
@@ -128,12 +288,12 @@ body {
 }
 
 .sub-folder-btn.active {
-    background: var(--bg-active); /* Simple highlighted background */
+    background: var(--bg-active);
     color: var(--text-main);
     font-weight: bold;
 }
 
-/* --- MAIN GRID CONTAINER --- */
+/* --- MAIN GRID CONTAINER (Asset Browser) --- */
 .grid-container {
     flex: 1;
     display: flex;
@@ -158,25 +318,17 @@ body {
     overflow-y: auto;
     height: 100%;
     padding-bottom: 20px;
-    align-content: start; /* Packs items to the top */
-    /* Default Fallback */
+    align-content: start;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 }
 
-/* Layout: Gallery (GFX, VFX, PRESETS) - 2 Columns */
 .grid.layout-gallery {
     grid-template-columns: 1fr 1fr;
 }
 
-/* Layout: List (SFX) - Full Width */
 .grid.layout-list {
     grid-template-columns: 1fr;
-    
-    /* --- ADD THESE 3 LINES --- */
-    grid-auto-rows: min-content; /* Forces the row height to snap to the card height (32px) */
-          /* Packs all items to the top, preventing vertical spreading */
-             /* Allows grid to grow with content instead of forcing 100% height */
-    
+    grid-auto-rows: min-content;
     gap: 9px;
 }
 
@@ -199,16 +351,15 @@ body {
     z-index: 2;
 }
 
-/* List View Overrides for Cards */
+/* List View Overrides */
 .grid.layout-list .asset-card {
     height: 32px;
     display: flex;
     align-items: center;
     padding: 0 10px;
-    border-radius: 40px;
+    border-radius: 5px;
 }
 
-/* List View Hover Override (Disable 'pop up' effect) */
 .grid.layout-list .asset-card:hover {
     transform: none;
     background: var(--bg-hover);
@@ -242,7 +393,6 @@ body {
     pointer-events: none;
 }
 
-/* List View Label Overrides */
 .grid.layout-list .card-label {
     position: static;
     width: auto;
@@ -271,7 +421,6 @@ body {
     color: #444;
 }
 
-/* List View Placeholder Overrides */
 .grid.layout-list .preset-placeholder {
     width: 24px;
     height: auto;

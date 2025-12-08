@@ -10,8 +10,8 @@ const assetsRoot = path.join(extensionRoot, 'assets');
 const TAB_CONFIG = {
     'SFX': { types: ['.wav', '.mp3', '.aiff'], color: '#00e5ff', isPreset: false },
     'GFX': { types: ['.mov', '.mp4', '.png'], color: '#00e5ff', isPreset: false },
-    'VFX': { types: ['.mov', '.mp4'], color: '#00e5ff', isPreset: false },
-    'PRESETS': { types: ['.ffx'], color: '#00e5ff', isPreset: true }
+    'PRESETS': { types: ['.ffx'], color: '#00e5ff', isPreset: true },
+    'MAIN': { color: '#00e5ff' } // Main tools
 };
 
 let activeTab = 'SFX';
@@ -21,12 +21,15 @@ let currentAudio = null;
 // --- INITIALIZATION ---
 function init() {
     setupTabs();
-    loadSidebar('SFX'); // Load default
+    setupMainTools();
+    document.querySelector('.tab-btn[data-tab="SFX"]').click(); // Load default
 }
 
 // 1. SETUP TABS (Horizontal)
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
+    const browserView = document.getElementById('browserView');
+    const toolsView = document.getElementById('toolsView');
     tabs.forEach(tab => {
         tab.onclick = () => {
             // UI Update
@@ -35,11 +38,66 @@ function setupTabs() {
             
             // Logic Update
             activeTab = tab.getAttribute('data-tab');
-            updateThemeColor();
-            loadSidebar(activeTab);
+            if (activeTab === 'MAIN') {
+                // Show Tools, Hide Browser
+                browserView.classList.add('hidden');
+                toolsView.classList.remove('hidden');
+            } else {
+                // Show Browser, Hide Tools
+                toolsView.classList.add('hidden');
+                browserView.classList.remove('hidden');
+                loadSidebar(activeTab); // Load assets for this tab
+            }
         };
     });
 }
+
+
+// Replace your existing setupMainTools function with this:
+
+function setupMainTools() {
+    // 1. Pre-compose Logic (Shift Key)
+    const btnPre = document.getElementById('btnPrecompose');
+    if(btnPre) {
+        btnPre.onclick = (e) => {
+            const isShift = e.shiftKey;
+            runScript('doPrecompose', isShift);
+        };
+    }
+
+    // 2. Solid Color Modal Logic
+    const btnSolid = document.getElementById('btnSolid');
+    const modal = document.getElementById('colorModal');
+    const closeModal = document.getElementById('closeModal');
+    const swatches = document.querySelectorAll('.color-swatch');
+
+    // Open Modal
+    btnSolid.onclick = () => {
+        modal.classList.remove('hidden');
+    };
+
+    // Close Modal
+    closeModal.onclick = () => {
+        modal.classList.add('hidden');
+    };
+
+    // Color Click
+    swatches.forEach(swatch => {
+        swatch.onclick = () => {
+            const color = swatch.getAttribute('data-col');
+            // Pass 'solid' and the Hex Code to JSX
+            csInterface.evalScript(`createLayer("solid", "${color}")`);
+            modal.classList.add('hidden');
+        };
+    });
+}
+// Global script runner for HTML buttons
+window.runScript = function(funcName, arg) {
+    let script = `${funcName}(${arg})`;
+    if (typeof arg === 'string') script = `${funcName}("${arg}")`;
+    csInterface.evalScript(script);
+};
+
 
 // 2. LOAD SIDEBAR (Vertical Folders)
 function loadSidebar(tabName) {
@@ -202,10 +260,6 @@ function loadGrid(tabName, category) {
 }
 
 // Helpers
-function updateThemeColor() {
-    const color = TAB_CONFIG[activeTab].color;
-    document.querySelector('.brand span').style.color = color;
-}
 
 function playAudio(path) {
     stopAudio();

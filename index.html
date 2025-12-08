@@ -27,6 +27,8 @@
         </div>
 
         <div class="tools-view hidden" id="toolsView">
+
+            <input type="text" id="layerNameInput" class="main-input" placeholder="Layer / Comp Name...">
             
             <div class="compact-grid">
                 
@@ -34,14 +36,26 @@
                 <button class="tool-btn" onclick="runScript('createLayer', 'null')">NULL</button>
                 <button class="tool-btn" onclick="runScript('createLayer', 'camera')">CAM</button>
                 <button class="tool-btn" onclick="runScript('createLayer', 'text')">TEXT</button>
-
-                <button class="tool-btn" id="btnSolid">SOLID</button>
+                <button class="tool-btn" id="btnSolid">SLD</button>
+                <button class="tool-btn" id="btnPrecompose">PRE-COMP</button>
                 <button class="tool-btn" onclick="runScript('fitToComp')">FIT</button>
+                <button class="tool-btn delete-btn" onclick="runScript('deleteSelectedLayers')">DLT</button>
+                <button class="tool-btn" onclick="runScript('trimSelectedLayers', 'left')">TRM [</button>
+                <button class="tool-btn" onclick="runScript('trimSelectedLayers', 'right')">TRM ]</button>
+                
             </div>
 
-            <button class="tool-btn full-width-btn" id="btnPrecompose">
-                PRE-COMP
-            </button>
+            <div>
+
+            <div class="control-row">
+                <button class="mini-btn" onclick="moveTime(-20)">-20</button>
+                <button class="mini-btn" onclick="moveTime(-10)">-10</button>
+                <button class="mini-btn" onclick="moveTime(-5)">-5</button>
+                <button class="mini-btn" onclick="moveTime(5)">+5</button>
+                <button class="mini-btn" onclick="moveTime(10)">+10</button>
+                <button class="mini-btn" onclick="moveTime(20)">+20</button>
+            </div>
+
 
             <div class="anchor-section">
                 <div class="anchor-grid">
@@ -56,6 +70,7 @@
                     <button class="anchor-btn br" onclick="runScript('setAnchorPoint', 8)"></button>
                 </div>
             </div>
+            
 
             <div id="colorModal" class="color-modal hidden">
                 <div class="color-grid">

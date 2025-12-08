@@ -55,7 +55,11 @@ function applyPreset(presetPath) {
 }
 
 // 3. CREATE LAYER (Matches Selection Length & Place)
-function createLayer(type, colorHex) {
+// [host.jsx]
+
+// 3. CREATE LAYER (Fixed: Explicit Renaming)
+// 3. CREATE LAYER (Fixed: Naming applied to Source & Layer)
+function createLayer(type, colorHex, userLabel) {
     app.beginUndoGroup("Sniprr Create " + type);
     var comp = app.project.activeItem;
     if (!comp || !(comp instanceof CompItem)) {
@@ -65,33 +69,27 @@ function createLayer(type, colorHex) {
 
     var target = (comp.selectedLayers.length > 0) ? comp.selectedLayers[0] : null;
 
-    // Default params
+    // 1. Determine Dimensions & Time
     var w = comp.width;
     var h = comp.height;
     var pa = comp.pixelAspect;
     var duration = comp.duration; 
-    var startT = 0; // Default start at 0 if no target
+    var startT = (target) ? target.inPoint : comp.time;
+    if (target) duration = target.outPoint - target.inPoint;
 
-    // If target exists, match Dimensions & Time Span exactly
-    if (target) {
-        if (type === 'solid' || type === 'adjustment') {
-             if (target.source) {
-                w = target.source.width;
-                h = target.source.height;
-                pa = target.source.pixelAspect;
-             } else {
-                w = target.width;
-                h = target.height;
-             }
-        }
-        startT = target.inPoint;
-        duration = target.outPoint - target.inPoint;
-    } else {
-        // If no target, start at current time indicator (CTI)
-        startT = comp.time;
+    // 2. Resolve Name
+    // If userLabel is empty, use a Type-specific default
+    var finalName = userLabel;
+    if (!finalName || finalName === "") {
+        if (type === 'adjustment') finalName = "Adjustment Layer";
+        else if (type === 'solid') finalName = "Solid";
+        else if (type === 'camera') finalName = "Camera";
+        else if (type === 'text') finalName = "Text";
+        else if (type === 'null') finalName = "Null";
+        else finalName = "Layer";
     }
 
-    // Color
+    // 3. Resolve Color
     var col = [0.5, 0.5, 0.5];
     if (colorHex) {
         var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(colorHex);
@@ -102,26 +100,35 @@ function createLayer(type, colorHex) {
     try {
         switch(type) {
             case 'adjustment':
-                newLayer = comp.layers.addSolid([1,1,1], "Adjustment Layer", w, h, pa, duration);
+                // Pass finalName to addSolid so the Project Item is named correctly
+                newLayer = comp.layers.addSolid([1,1,1], finalName, w, h, pa, duration);
                 newLayer.adjustmentLayer = true;
                 newLayer.label = 5; 
                 break;
+                
             case 'solid':
-                newLayer = comp.layers.addSolid(col, "Solid", w, h, pa, duration);
+                newLayer = comp.layers.addSolid(col, finalName, w, h, pa, duration);
                 break;
+                
             case 'null':
                 newLayer = comp.layers.addNull();
                 break;
+                
             case 'camera':
-                newLayer = comp.layers.addCamera("Camera", [comp.width/2, comp.height/2]);
+                newLayer = comp.layers.addCamera(finalName, [comp.width/2, comp.height/2]);
                 break;
+                
             case 'text':
-                newLayer = comp.layers.addText("Text");
+                // Pass finalName as the source text content
+                newLayer = comp.layers.addText(finalName);
                 break;
         }
 
         if (newLayer) {
-            // Apply Timing
+            // Force Layer Name (Ensures Timeline name matches input)
+            newLayer.name = finalName;
+
+            // Match Timing / Position
             if (target) {
                 newLayer.startTime = target.startTime;
                 newLayer.inPoint = target.inPoint;
@@ -135,8 +142,8 @@ function createLayer(type, colorHex) {
     app.endUndoGroup();
 }
 
-// 4. PRE-COMPOSE (Updated: Shift Mode Trims Duration)
-function doPrecompose(individual) {
+// 4. PRE-COMPOSE (Fixed: Explicit Renaming)
+function doPrecompose(individual, userLabel) {
     app.beginUndoGroup("Sniprr Pre-compose");
     var comp = app.project.activeItem;
     if (!comp || !(comp instanceof CompItem) || comp.selectedLayers.length === 0) {
@@ -146,58 +153,41 @@ function doPrecompose(individual) {
 
     var sel = comp.selectedLayers;
 
-    // --- Helper: Trims a Pre-comp to match its content ---
     function trimPrecomp(compItem, newLayer, minIn, duration) {
-        // 1. Set duration of the new composition
         compItem.duration = duration;
-
-        // 2. Shift all layers inside back to 0
         for (var i = 1; i <= compItem.numLayers; i++) {
             var layer = compItem.layer(i);
             layer.startTime -= minIn;
         }
-
-        // 3. Adjust the Pre-comp layer in the main composition
         newLayer.startTime = minIn;
         newLayer.inPoint = minIn;
         newLayer.outPoint = minIn + duration;
     }
 
     if (individual) {
-        // --- INDIVIDUAL MODE ---
-        // We collect indices first because selection changes during pre-compose
-        var indices = [];
-        for (var i = 0; i < sel.length; i++) indices.push(sel[i].index);
-        
-        // Loop through indices (must handle carefully as layer objects invalidate)
-        // We go backwards or re-fetch. Easiest is to store ID or just process carefully.
-        // Actually, 'indices' remain valid if we don't delete layers above them?
-        // Pre-compose replaces the layer.
-        
-        // Better approach: Loop through the *original* selected layer objects. 
-        // Even if they are replaced, we can capture their data before the operation.
-        
+        // Individual Mode
         for (var i = 0; i < sel.length; i++) {
             var layer = sel[i];
             var idx = layer.index;
             var inP = layer.inPoint;
             var outP = layer.outPoint;
             var dur = outP - inP;
-            var name = layer.name;
             
-            // Perform Pre-compose on single index
-            var newComp = comp.layers.precompose([idx], name + " Comp", true);
+            // Generate Name
+            var baseName = (userLabel && userLabel !== "") ? userLabel : layer.name;
+            var finalName = baseName + " Comp " + (i+1);
             
-            // The new layer is now at 'idx' (usually) and selected.
-            // AE selects the new layer automatically.
-            var newLayer = comp.selectedLayers[0];
+            var newComp = comp.layers.precompose([idx], finalName, true);
+            var newLayer = comp.selectedLayers[0]; // The new precomp layer
             
-            // Apply Trim Logic
+            // Rename the Layer inside the main comp
+            if (userLabel && userLabel !== "") newLayer.name = userLabel + " " + (i+1);
+            
             trimPrecomp(newComp, newLayer, inP, dur);
         }
 
     } else {
-        // --- GROUP MODE ---
+        // Group Mode
         var indices = [];
         var minIn = 999999;
         var maxOut = -999999;
@@ -209,8 +199,13 @@ function doPrecompose(individual) {
         }
         
         var dur = maxOut - minIn;
-        var newComp = comp.layers.precompose(indices, "Pre-comp", true);
+        var pName = (userLabel && userLabel !== "") ? userLabel : "Pre-comp";
+        
+        var newComp = comp.layers.precompose(indices, pName, true);
         var newLayer = comp.selectedLayers[0];
+        
+        // Rename the Layer explicitly
+        if (userLabel && userLabel !== "") newLayer.name = userLabel;
         
         trimPrecomp(newComp, newLayer, minIn, dur);
     }
@@ -218,28 +213,7 @@ function doPrecompose(individual) {
 }
 
 // 5. FRAME BLENDING (Fixed)
-function setFrameBlending(enable) {
-    app.beginUndoGroup("Sniprr Frame Blend");
-    var comp = app.project.activeItem;
-    if (comp && comp instanceof CompItem) {
-        // 1. Force Composition "Enable Frame Blending" ON
-        // If this is off, layer switches do nothing visually.
-        if (enable) comp.frameBlending = true;
-        
-        // 2. Set Layer Switches
-        var sel = comp.selectedLayers;
-        for (var i = 0; i < sel.length; i++) {
-            var layer = sel[i];
-            // 'enable' comes in as boolean true/false
-            if (enable) {
-                layer.frameBlendingType = FrameBlendingType.PIXEL_MOTION;
-            } else {
-                layer.frameBlendingType = FrameBlendingType.NO_FRAME_BLENDING;
-            }
-        }
-    }
-    app.endUndoGroup();
-}
+
 
 // 6. FIT TO COMP (Fixed: No Shrink, Maintain Aspect)
 function fitToComp() {
@@ -274,7 +248,7 @@ function fitToComp() {
         // but if the user wants "No shrink", maybe they mean "Fill"? 
         // Let's use Math.min (Fit) as per standard behavior, but ensure 3D layers handled.
         
-        var finalScale = Math.min(scaleX, scaleY);
+        var finalScale = scaleY;
         
         // Handle 3D Layers (Scale has 3 values)
         if (layer.threeDLayer) {
@@ -354,6 +328,60 @@ function setAnchorPoint(posIndex) {
         } else {
              layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1]]);
              layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY]);
+        }
+    }
+    app.endUndoGroup();
+}
+
+// 8. MOVE CTI (Frames)
+function moveCTI(deltaFrames) {
+    var comp = app.project.activeItem;
+    if (comp && comp instanceof CompItem) {
+        // Move Current Time Indicator
+        comp.time += deltaFrames * comp.frameDuration;
+    }
+}
+
+// 9. DELETE LAYERS
+function deleteSelectedLayers() {
+    app.beginUndoGroup("Sniprr Delete");
+    var comp = app.project.activeItem;
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        for (var i = 0; i < sel.length; i++) {
+            sel[i].remove();
+        }
+    }
+    app.endUndoGroup();
+}
+
+// 10. TRIM LAYERS (Split Left / Split Right)
+// 10. TRIM LAYERS (Fixed: Only trims if CTI is inside the layer)
+function trimSelectedLayers(side) {
+    app.beginUndoGroup("Sniprr Trim " + side);
+    var comp = app.project.activeItem;
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        var t = comp.time;
+        
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            
+            // TRIM LEFT ( [ )
+            if (side === 'left') {
+                // Only trim if time is AFTER the start and BEFORE the end
+                // This prevents it from 'Extending' backwards or erroring
+                if (t > layer.inPoint && t < layer.outPoint) {
+                    layer.inPoint = t;
+                }
+            } 
+            // TRIM RIGHT ( ] )
+            else if (side === 'right') {
+                // Only trim if time is AFTER the start and BEFORE the end
+                if (t > layer.inPoint && t < layer.outPoint) {
+                    layer.outPoint = t;
+                }
+            }
         }
     }
     app.endUndoGroup();

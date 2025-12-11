@@ -17,9 +17,54 @@ let activeTab = 'SFX';
 let activeCategory = '';
 let currentAudio = null;
 
+// --- PAGINATION VARIABLES ---
+let allFiles = [];      // Full list of files for category
+let currentPage = 0;    // Current page index
+const BATCH_SIZE = 9;   // Items per page
+let isLoading = false;  
+
 function init() {
     setupTabs();
     setupMainTools();
+    
+    // 1. Sidebar Toggle Listener
+    const toggleBtn = document.getElementById('sidebarToggle');
+    if (toggleBtn) {
+        toggleBtn.onclick = () => {
+            const sidebar = document.getElementById('subFolderList');
+            sidebar.classList.toggle('visible');
+        };
+    }
+
+    // 2. Scroll Listener (Triggers Next Page)
+    // [REPLACE THIS SECTION IN init()] 
+    const grid = document.getElementById('assetGrid');
+    if (grid) {
+        // Remove old onscroll if it exists
+        grid.onscroll = null; 
+
+        // Add Wheel Listener (Works even without scrollbar)
+        grid.addEventListener('wheel', (e) => {
+            if (isLoading || activeTab === 'MAIN') return;
+
+            // e.deltaY > 0 means Scrolling Down
+            // e.deltaY < 0 means Scrolling Up
+
+            if (e.deltaY > 0) {
+                // NEXT PAGE: If at bottom OR no scrollbar
+                if(grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 5) {
+                    nextPage();
+                }
+            } else {
+                // PREV PAGE: If at top
+                if(grid.scrollTop <= 0) {
+                    prevPage();
+                }
+            }
+        });
+    }
+
+    // Initial load
     document.querySelector('.tab-btn[data-tab="SFX"]').click(); 
 }
 
@@ -27,15 +72,24 @@ function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
     const browserView = document.getElementById('browserView');
     const toolsView = document.getElementById('toolsView');
+    const toggleBtn = document.getElementById('sidebarToggle');
+
     tabs.forEach(tab => {
         tab.onclick = () => {
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             activeTab = tab.getAttribute('data-tab');
+
+            // --- Updated: Show Toggle Button for ALL Asset Tabs (SFX, GFX, PRESETS) ---
             if (activeTab === 'MAIN') {
+                if(toggleBtn) toggleBtn.classList.add('hidden');
+                document.getElementById('subFolderList').classList.remove('visible'); 
+                
                 browserView.classList.add('hidden');
                 toolsView.classList.remove('hidden');
             } else {
+                if(toggleBtn) toggleBtn.classList.remove('hidden'); // Visible for SFX too now
+                
                 toolsView.classList.add('hidden');
                 browserView.classList.remove('hidden');
                 loadSidebar(activeTab); 
@@ -50,8 +104,7 @@ function setupMainTools() {
     if(btnPre) {
         btnPre.onclick = (e) => {
             const isShift = e.shiftKey;
-            let name = document.getElementById('layerNameInput').value;
-            // Escape quotes to prevent script errors
+            let name = document.getElementById('layerNameInput') ? document.getElementById('layerNameInput').value : "Pre-comp";
             name = name.replace(/"/g, '\\"');
             csInterface.evalScript(`doPrecompose(${isShift}, "${name}")`);
         };
@@ -69,11 +122,7 @@ function setupMainTools() {
     swatches.forEach(swatch => {
         swatch.onclick = () => {
             const color = swatch.getAttribute('data-col');
-            let name = document.getElementById('layerNameInput').value;
-            name = name.replace(/"/g, '\\"');
-            
-            // Pass the name to the JSX
-            csInterface.evalScript(`createLayer("solid", "${color}", "${name}")`);
+            csInterface.evalScript(`createLayer("solid", "${color}")`);
             modal.classList.add('hidden');
         };
     });
@@ -90,23 +139,11 @@ window.runScript = function(funcName, arg1, arg2) {
     csInterface.evalScript(script);
 };
 
-// Helper for Named Layers (Null, Cam, Adj, Text)
-window.createNamed = function(type) {
-    const name = document.getElementById('layerNameInput').value;
-    // createLayer(type, color=null, name)
-    csInterface.evalScript(`createLayer("${type}", null, "${name}")`);
-};
-
-// Helper for Time Move
-window.moveTime = function(frames) {
-    csInterface.evalScript(`moveCTI(${frames})`);
-};
-
-// ... (Rest of sidebar/grid loading code remains the same) ...
 function loadSidebar(tabName) {
     const sidebar = document.getElementById('subFolderList');
     const folderPath = path.join(assetsRoot, tabName);
     sidebar.innerHTML = '';
+
     fs.readdir(folderPath, (err, files) => {
         if (err) {
             sidebar.innerHTML = '<div style="padding:10px; opacity:0.5">No folder found</div>';
@@ -130,68 +167,131 @@ function loadSidebar(tabName) {
     });
 }
 
+// --- NEW PAGE LOGIC ---
 function loadGrid(tabName, category) {
     const grid = document.getElementById('assetGrid');
+    const folderPath = path.join(assetsRoot, tabName, category);
+    const config = TAB_CONFIG[tabName];
+
+    // Layout
     grid.className = 'grid'; 
     if (tabName === 'SFX') grid.classList.add('layout-list');
     else grid.classList.add('layout-gallery');
 
+    // Header
     const display = document.getElementById('currentPathDisplay');
-    const folderPath = path.join(assetsRoot, tabName, category);
-    const config = TAB_CONFIG[tabName];
-    
     display.innerText = `${tabName} > ${category}`;
     display.style.color = config.color;
-    grid.innerHTML = '';
-
+    
+    // Reset Data
+    allFiles = [];
+    currentPage = 0;
+    
     fs.readdir(folderPath, (err, files) => {
         if (err) return;
-        const validFiles = files.filter(file => config.types.includes(path.extname(file).toLowerCase()));
-
-        validFiles.forEach(file => {
-            const fullPath = path.join(folderPath, file);
-            const card = document.createElement('div');
-            card.className = 'asset-card';
-            if(config.isPreset) card.classList.add('preset-card');
-            
-            if (tabName === 'SFX') {
-                card.innerHTML = `<div class="preset-placeholder" style="color:${config.color}">🔊</div><div class="card-label">${file}</div>`;
-                card.onmouseenter = () => playAudio(fullPath);
-                card.onmouseleave = () => stopAudio();
-            } else if (tabName === 'GFX' || tabName === 'VFX') {
-                const isVideo = ['.mov', '.mp4'].includes(path.extname(file).toLowerCase());
-                if(isVideo) {
-                    card.innerHTML = `<video class="card-media" src="${fullPath}" loop muted></video><div class="card-label">${file}</div>`;
-                    const vid = card.querySelector('video');
-                    vid.onloadedmetadata = () => { vid.currentTime = vid.duration / 2; };
-                    card.onmouseenter = () => { vid.play(); };
-                    card.onmouseleave = () => { vid.pause(); vid.currentTime = vid.duration / 2; };
-                } else {
-                    card.innerHTML = `<img class="card-media" src="${fullPath}"> <div class="card-label">${file}</div>`;
-                }
-            } else if (tabName === 'PRESETS') {
-                const previewPath = fullPath.replace('.ffx', '.mp4');
-                let html = `<div class="preset-placeholder">✨</div>`;
-                if (fs.existsSync(previewPath)) {
-                   html = `<div class="preset-placeholder">✨</div><video class="card-media" src="${previewPath}" loop muted></video><div class="card-label">${file}</div>`;
-                } else {
-                    html += `<div class="card-label">${file}</div>`;
-                }
-                card.innerHTML = html;
-                const vid = card.querySelector('video');
-                if (vid) {
-                    vid.onloadedmetadata = () => { vid.currentTime = vid.duration / 2; };
-                    card.onmouseenter = () => { vid.play(); };
-                    card.onmouseleave = () => { vid.pause(); vid.currentTime = vid.duration / 2; };
-                }
-            }
-            card.ondblclick = () => {
-                if (config.isPreset) sendToAE('applyPreset', fullPath);
-                else sendToAE('importFile', fullPath);
-            };
-            grid.appendChild(card);
-        });
+        
+        allFiles = files.filter(file => config.types.includes(path.extname(file).toLowerCase()));
+        renderPage(0); // Load Page 1 (Index 0)
     });
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(allFiles.length / BATCH_SIZE);
+    if (currentPage < totalPages - 1) {
+        currentPage++;
+        renderPage(currentPage);
+    }
+}
+
+function prevPage() {
+    if (currentPage > 0) {
+        currentPage--;
+        renderPage(currentPage);
+    }
+}
+
+function renderPage(pageIndex) {
+    const grid = document.getElementById('assetGrid');
+    const folderPath = path.join(assetsRoot, activeTab, activeCategory);
+    const config = TAB_CONFIG[activeTab];
+    
+    isLoading = true;
+    grid.innerHTML = ''; // Clear previous items (Optimized RAM)
+    grid.scrollTop = 0;  // Reset scroll to top
+
+    // Slicing logic
+    const start = pageIndex * BATCH_SIZE;
+    const end = start + BATCH_SIZE;
+    const batch = allFiles.slice(start, end);
+
+    // --- Navigation Controls (Top) ---
+    // Useful to go back since we cleared the grid
+    if (pageIndex > 0) {
+        const prevBtn = document.createElement('div');
+        prevBtn.innerText = "▲ Previous Page";
+        prevBtn.style.cssText = "grid-column: 1 / -1; text-align: center; padding: 10px; cursor: pointer; background: var(--bg-hover); color: var(--text-muted); border-radius: 4px; margin-bottom: 5px;";
+        prevBtn.onclick = prevPage;
+        grid.appendChild(prevBtn);
+    }
+
+    // --- Render Items ---
+    batch.forEach(file => {
+        const fullPath = path.join(folderPath, file);
+        const card = document.createElement('div');
+        card.className = 'asset-card';
+        if(config.isPreset) card.classList.add('preset-card');
+        
+        // --- CARD CONTENT ---
+        if (activeTab === 'SFX') {
+            card.innerHTML = `<div class="preset-placeholder" style="color:${config.color}">🔊</div><div class="card-label">${file}</div>`;
+            card.onmouseenter = () => playAudio(fullPath);
+            card.onmouseleave = () => stopAudio();
+        } else if (activeTab === 'GFX' || activeTab === 'VFX') {
+            const isVideo = ['.mov', '.mp4'].includes(path.extname(file).toLowerCase());
+            if(isVideo) {
+                card.innerHTML = `<video class="card-media" src="${fullPath}" loop muted></video><div class="card-label">${file}</div>`;
+                const vid = card.querySelector('video');
+                vid.onloadedmetadata = () => { vid.currentTime = vid.duration / 2; };
+                card.onmouseenter = () => { vid.play(); };
+                card.onmouseleave = () => { vid.pause(); vid.currentTime = vid.duration / 2; };
+            } else {
+                card.innerHTML = `<img class="card-media" src="${fullPath}"> <div class="card-label">${file}</div>`;
+            }
+        } else if (activeTab === 'PRESETS') {
+            const previewPath = fullPath.replace('.ffx', '.mp4');
+            let html = `<div class="preset-placeholder">✨</div>`;
+            if (fs.existsSync(previewPath)) {
+               html = `<div class="preset-placeholder">✨</div><video class="card-media" src="${previewPath}" loop muted></video><div class="card-label">${file}</div>`;
+            } else {
+                html += `<div class="card-label">${file}</div>`;
+            }
+            card.innerHTML = html;
+            const vid = card.querySelector('video');
+            if (vid) {
+                vid.onloadedmetadata = () => { vid.currentTime = vid.duration / 2; };
+                card.onmouseenter = () => { vid.play(); };
+                card.onmouseleave = () => { vid.pause(); vid.currentTime = vid.duration / 2; };
+            }
+        }
+        
+        card.ondblclick = () => {
+            if (config.isPreset) sendToAE('applyPreset', fullPath);
+            else sendToAE('importFile', fullPath);
+        };
+        grid.appendChild(card);
+    });
+
+    // --- Navigation Controls (Bottom) ---
+    // If there are more pages, show "Scroll for Next" or a Button
+    if (pageIndex < Math.ceil(allFiles.length / BATCH_SIZE) - 1) {
+        const nextBtn = document.createElement('div');
+        nextBtn.innerText = "▼ Next Page";
+        nextBtn.style.cssText = "grid-column: 1 / -1; text-align: center; padding: 10px; cursor: pointer; background: var(--bg-hover); color: var(--text-muted); border-radius: 4px; margin-top: 5px;";
+        nextBtn.onclick = nextPage;
+        grid.appendChild(nextBtn);
+    }
+
+    isLoading = false;
 }
 
 function playAudio(path) {

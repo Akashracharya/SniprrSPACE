@@ -314,13 +314,40 @@ body {
 
 /* --- SIDEBAR (Asset Browser) --- */
 .sidebar {
-    width: 75px;
-    background: var(--bg-glass);
-    backdrop-filter: blur(10px);
+    width: 120px;
+    height: 100%;
+    background: var(--bg-glass); /* Glassmorphic */
+    backdrop-filter: blur(15px);
     border-right: 1px solid var(--border);
-    padding: 7px;
+    padding: 10px;
     overflow-y: auto;
+    
+    /* Overlap Logic */
+    position: absolute; 
+    left: -140px; /* Hide it initially */
+    z-index: 50;
+    transition: left 0.3s ease-in-out;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.5);
 }
+
+.sidebar.visible {
+    left: 0;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 60; /* Above sidebar */
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-main);
+    background: var(--bg-panel);
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+.sidebar-toggle:hover { background: var(--bg-active); }
 
 .sub-folder-btn {
     user-select: none;
@@ -377,7 +404,7 @@ body {
 }
 
 .grid.layout-gallery {
-    grid-template-columns: 1fr 1fr;
+   grid-template-columns: repeat(3, 1fr);
 }
 
 .grid.layout-list {

@@ -226,13 +226,7 @@ function renderPage(pageIndex) {
 
     // --- Navigation Controls (Top) ---
     // Useful to go back since we cleared the grid
-    if (pageIndex > 0) {
-        const prevBtn = document.createElement('div');
-        prevBtn.innerText = "▲ Previous Page";
-        prevBtn.style.cssText = "grid-column: 1 / -1; text-align: center; padding: 10px; cursor: pointer; background: var(--bg-hover); color: var(--text-muted); border-radius: 4px; margin-bottom: 5px;";
-        prevBtn.onclick = prevPage;
-        grid.appendChild(prevBtn);
-    }
+    
 
     // --- Render Items ---
     batch.forEach(file => {
@@ -281,18 +275,47 @@ function renderPage(pageIndex) {
         grid.appendChild(card);
     });
 
-    // --- Navigation Controls (Bottom) ---
-    // If there are more pages, show "Scroll for Next" or a Button
-    if (pageIndex < Math.ceil(allFiles.length / BATCH_SIZE) - 1) {
-        const nextBtn = document.createElement('div');
-        nextBtn.innerText = "▼ Next Page";
-        nextBtn.style.cssText = "grid-column: 1 / -1; text-align: center; padding: 10px; cursor: pointer; background: var(--bg-hover); color: var(--text-muted); border-radius: 4px; margin-top: 5px;";
-        nextBtn.onclick = nextPage;
-        grid.appendChild(nextBtn);
-    }
-
+    updateFloatingPagination(pageIndex);
     isLoading = false;
 }
+
+function updateFloatingPagination(pageIndex) {
+    // 1. Get or Create Container (attached to the grid-container, outside the scrollable grid)
+    let container = document.getElementById('paginationFloat');
+    
+    // Create it if it doesn't exist yet
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'paginationFloat';
+        container.className = 'pagination-float';
+        document.querySelector('.grid-container').appendChild(container);
+    }
+    
+    container.innerHTML = ''; // Clear existing buttons
+
+    const totalPages = Math.ceil(allFiles.length / BATCH_SIZE);
+
+    // 2. Add Prev Button (Up Arrow)
+    if (pageIndex > 0) {
+        const upBtn = document.createElement('div');
+        upBtn.className = 'float-btn';
+        upBtn.innerHTML = '▲'; 
+        upBtn.title = "Previous Page";
+        upBtn.onclick = prevPage;
+        container.appendChild(upBtn);
+    }
+
+    // 3. Add Next Button (Down Arrow)
+    if (pageIndex < totalPages - 1) {
+        const downBtn = document.createElement('div');
+        downBtn.className = 'float-btn';
+        downBtn.innerHTML = '▼';
+        downBtn.title = "Next Page";
+        downBtn.onclick = nextPage;
+        container.appendChild(downBtn);
+    }
+}
+
 
 function playAudio(path) {
     stopAudio();

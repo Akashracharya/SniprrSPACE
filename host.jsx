@@ -386,3 +386,19 @@ function trimSelectedLayers(side) {
     }
     app.endUndoGroup();
 }
+
+// 5. BLENDING MODE
+function setBlendingMode(modeName) {
+    app.beginUndoGroup("Sniprr Blend Mode");
+    try {
+        var comp = app.project.activeItem;
+        if (comp && comp.selectedLayers.length > 0) {
+            var sel = comp.selectedLayers;
+            for (var i = 0; i < sel.length; i++) {
+                if (modeName === "ADD") sel[i].blendingMode = BlendingMode.ADD;
+                // You can add other modes here later (e.g., SCREEN, OVERLAY)
+            }
+        }
+    } catch(err) { alert(err.toString()); }
+    app.endUndoGroup();
+}

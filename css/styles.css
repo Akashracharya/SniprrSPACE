@@ -44,7 +44,7 @@ body {
     padding: 8px 10px;
     border-radius: 4px;
     width: 100%;
-    box-sizing: border-box; /* Fix width issues */
+    box-sizing: border-box; 
     margin-bottom: 10px;
     font-family: 'Segoe UI', sans-serif;
     outline: none;
@@ -86,7 +86,7 @@ body {
 }
 
 .delete-btn:hover {
-    background: #ff3355 !important; /* Red for delete */
+    background: #ff3355 !important; 
     border-color: #ff3355 !important;
 }
 
@@ -117,8 +117,8 @@ body {
 .brand {
     font-weight: 800;
     letter-spacing: 1px;
-    margin-right: auto; /* Pushes tabs to the right (optional, or use fixed margin) */
-    white-space: nowrap; /* Keeps logo on one line */
+    margin-right: auto; 
+    white-space: nowrap; 
     flex-shrink: 0;
 }
 
@@ -128,9 +128,9 @@ body {
 
 .nav-tabs {
     display: flex;
-    gap: 4px; /* Reduced gap for better fit */
+    gap: 4px; 
     justify-content: flex-end;
-    flex-wrap: nowrap; /* Forces single line */
+    flex-wrap: nowrap; 
     min-width: 0;
 }
 
@@ -143,7 +143,7 @@ body {
     transition: 0.1s;
     color: var(--text-muted);
     user-select: none;
-    white-space: nowrap; /* Prevents text wrapping */
+    white-space: nowrap; 
     text-align: center;
 }
 
@@ -165,12 +165,12 @@ body {
     overflow: hidden;
 }
 
-/* --- MAIN TOOLS VIEW (New for Main Tab) --- */
+/* --- MAIN TOOLS VIEW --- */
 .tools-view {
     flex: 1;
     background: var(--bg-deep);
     padding: 15px;
-    overflow-y: hidden; /* Prevent scrolling for tools */
+    overflow-y: hidden; 
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -179,7 +179,7 @@ body {
 /* Compact Grid for Tools */
 .compact-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr); /* 4 buttons per row */
+    grid-template-columns: repeat(5, 1fr); 
     gap: 8px;
     width: 100%;
 }
@@ -210,15 +210,6 @@ body {
     transform: scale(0.98);
 }
 
-/* Full Width Button (Pre-compose) */
-.full-width-btn {
-    width: 100%;
-    padding: 12px;
-    margin-top: 5px;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-}
-
 /* --- ANCHOR POINT TOOLS --- */
 .anchor-section {
     display: flex;
@@ -233,7 +224,7 @@ body {
     display: grid;
     grid-template-columns: repeat(3, 30px);
     grid-template-rows: repeat(3, 30px);
-    gap: 6px; /* Slightly larger gap for easier clicking */
+    gap: 6px; 
 }
 
 .anchor-btn {
@@ -252,7 +243,6 @@ body {
     z-index: 10;
 }
 
-/* Center Dot Indicator */
 .anchor-btn::after {
     content: '';
     position: absolute;
@@ -263,7 +253,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    pointer-events: none; /* Crucial: lets clicks pass through to button */
+    pointer-events: none; 
 }
 
 .anchor-btn:hover::after {
@@ -273,7 +263,7 @@ body {
 /* --- COLOR PICKER MODAL --- */
 .color-modal {
     position: absolute;
-    top: 50px; /* Below header */
+    top: 50px; 
     left: 0;
     right: 0;
     bottom: 0;
@@ -322,23 +312,18 @@ body {
 
 /* --- SIDEBAR (Asset Browser) --- */
 .sidebar {
-    width: 120px; /* Slightly wider for modern spacing */
+    width: 120px; 
     height: 100%;
-    
-    /* Modern Glassmorphism */
-    background: rgba(14, 14, 14, 0.65); /* Translucent dark */
-    backdrop-filter: blur(20px); /* Heavy blur for readability */
+    background: rgba(14, 14, 14, 0.65); 
+    backdrop-filter: blur(20px); 
     -webkit-backdrop-filter: blur(20px); 
     border-right: 1px solid rgba(255, 255, 255, 0.08);
-    
-    padding: 40px 10px 10px 10px; /* Top padding clears the toggle button */
+    padding: 40px 10px 10px 10px; 
     overflow-y: auto;
-    
-    /* Animation & Positioning */
     position: absolute; 
-    left: -160px; /* Hide completely */
+    left: -160px; 
     z-index: 50;
-    transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth modern ease */
+    transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
     box-shadow: 10px 0 40px rgba(0,0,0,0.6);
 }
 
@@ -350,23 +335,18 @@ body {
     position: absolute;
     top: 58px;
     left: 10px;
-    z-index: 60; /* Sits above sidebar */
-    
+    z-index: 60; 
     display: flex;
     align-items: center;
     justify-content: center;
-    
     width: 25px;
     height: 20px;
-    border-radius: 4px; /* Modern squircle */
-    
-    /* Glass Effect */
+    border-radius: 4px; 
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    
     color: rgba(255, 255, 255, 0.9);
     font-size: 15px;
     cursor: pointer;
@@ -378,7 +358,7 @@ body {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(127, 0, 255, 0.6);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8); /* Glow text */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8); 
 }
 
 .sidebar-toggle:active {
@@ -390,17 +370,13 @@ body {
     padding: 8px 10px;
     font-size: 11px;
     cursor: pointer;
-    
-    /* Improved Visibility */
     color: rgba(255, 255, 255, 0.7); 
     font-weight: 500;
     letter-spacing: 0.5px;
-    
     text-transform: capitalize;
     border-radius: 5px; 
     margin-bottom: 8px;
-    
-    border: 1px solid transparent; /* Placeholder to prevent shift */
+    border: 1px solid transparent; 
     transition: all 0.2s ease;
 }
 
@@ -408,23 +384,24 @@ body {
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
     border-color: rgba(255, 255, 255, 0.1);
-    padding-left: 10px; /* Slight slide animation */
+    padding-left: 10px; 
 }
 
 .sub-folder-btn.active {
-    background: rgba(127, 0, 255, 0.25); /* Tint of your Accent Color */
+    background: rgba(127, 0, 255, 0.25); 
     border: 1px solid rgba(127, 0, 255, 0.6);
     color: #ffffff;
     box-shadow: 0 0 20px rgba(127, 0, 255, 0.2);
 }
 
-/* --- MAIN GRID CONTAINER (Asset Browser) --- */
+/* --- MAIN GRID CONTAINER --- */
 .grid-container {
     flex: 1;
     display: flex;
     flex-direction: column;
     padding: 10px;
     overflow-y: hidden;
+    position: relative; 
 }
 
 .info-bar {
@@ -453,10 +430,11 @@ body {
    grid-template-columns: repeat(3, 1fr);
 }
 
-.grid.layout-list {
-    grid-template-columns: 1fr;
+/* 3x7 SFX Grid Layout */
+.grid.layout-sfx-grid {
+    grid-template-columns: repeat(3, 1fr); /* 3 Columns */
     grid-auto-rows: min-content;
-    gap: 9px;
+    gap: 8px;
 }
 
 /* --- ASSET CARDS --- */
@@ -476,19 +454,19 @@ body {
     border-color: #7f00ff;
 }
 
-/* List View Overrides */
-.grid.layout-list .asset-card {
-    height: 32px;
+/* SFX 3x7 Compact Card Override */
+.grid.layout-sfx-grid .asset-card {
+    height: 50px; /* Short height for 7 rows/page */
     display: flex;
+    flex-direction: row;
     align-items: center;
-    padding: 0 10px;
-    border-radius: 5px;
+    padding: 0 8px;
 }
 
-.grid.layout-list .asset-card:hover {
-    transform: none;
+.grid.layout-sfx-grid .asset-card:hover {
     background: var(--bg-hover);
     border-color: var(--accent-sfx);
+    transform: none;
 }
 
 /* --- CARD CONTENT --- */
@@ -518,16 +496,17 @@ body {
     pointer-events: none;
 }
 
-.grid.layout-list .card-label {
+/* SFX Label Override */
+.grid.layout-sfx-grid .card-label {
     position: static;
     width: auto;
     background: transparent;
     padding: 0;
     text-align: left;
-    font-size: 12px;
+    font-size: 11px;
 }
 
-/* --- PRESETS SPECIAL HANDLING --- */
+/* --- PRESETS --- */
 .asset-card.preset-card .card-media {
     display: none;
 }
@@ -546,71 +525,39 @@ body {
     color: #444;
 }
 
-.grid.layout-list .preset-placeholder {
-    width: 24px;
+/* SFX Placeholder Override */
+.grid.layout-sfx-grid .preset-placeholder {
+    width: 20px;
     height: auto;
-    font-size: 14px;
-    margin-right: 10px;
-    justify-content: flex-start;
+    font-size: 16px;
+    margin-right: 8px;
+    justify-content: center;
 }
 
 /* --- SCROLLBAR --- */
 ::-webkit-scrollbar {
     width: 5px;
     color: #7f00ff;
-    
 }
-
 ::-webkit-scrollbar-track {
     background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
     border-radius: 3px;
-    
 }
 
 /* --- RESPONSIVE BREAKPOINTS --- */
-
-/* Medium Width (e.g., standard panel size) */
 @media (max-width: 350px) {
-    .brand {
-        font-size: 14px;
-        margin-right: 10px;
-    }
-    
-    .tab-btn {
-        padding: 6px 8px; /* Reduce padding */
-        font-size: 11px;  /* Reduce font size */
-    }
+    .brand { font-size: 14px; margin-right: 10px; }
+    .tab-btn { padding: 6px 8px; font-size: 11px; }
 }
 
-/* Very Narrow Width (e.g., minimum docked width) */
 @media (max-width: 280px) {
-    /* Hide the "SPACE" part of the logo to save room */
-    .brand span {
-        display: none;
-    }
-
-    .brand {
-        margin-right: 5px;
-    }
-
-    .nav-tabs {
-        gap: 2px;
-    }
-
-    .tab-btn {
-        padding: 5px 4px;
-        font-size: 10px;
-        flex: 1; /* Distribute space evenly if really tight */
-    }
-}
-
-/* --- Ensure container handles floating elements --- */
-.grid-container {
-    position: relative; /* Crucial for absolute positioning of buttons */
+    .brand span { display: none; }
+    .brand { margin-right: 5px; }
+    .nav-tabs { gap: 2px; }
+    .tab-btn { padding: 5px 4px; font-size: 10px; flex: 1; }
 }
 
 /* --- FLOATING PAGINATION --- */
@@ -621,24 +568,20 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 50; /* Above the grid content */
+    z-index: 50; 
 }
 
 .float-btn {
     width: 25px;
     height: 25px;
-    border-radius: 5px; /* Slightly rounded square */
-    
-    /* Glassmorphic Style */
+    border-radius: 5px; 
     background: rgba(20, 20, 20, 0.6); 
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    
     color: rgba(255, 255, 255, 0.9);
     font-size: 12px;
-    
     display: flex;
     align-items: center;
     justify-content: center;
@@ -648,7 +591,7 @@ body {
 }
 
 .float-btn:hover {
-    background: rgba(127, 0, 255, 0.8); /* Your Accent Color */
+    background: rgba(127, 0, 255, 0.8); 
     border-color: rgba(255, 255, 255, 0.5);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
@@ -658,27 +601,25 @@ body {
     transform: scale(0.95);
 }
 
-/* --- MIXED ROW (Frames + Add) --- */
+/* --- MIXED ROW --- */
 .mixed-control-row {
     display: flex;
     gap: 10px;
     margin-top: 10px;
-    height: 35px; /* Fixed height for alignment */
+    height: 35px; 
 }
 
 .frame-group-capsule {
-    flex: 1; /* Takes all remaining space on the left */
+    flex: 1; 
     display: flex;
     align-items: center;
     justify-content: space-evenly;
-    
     background: var(--bg-hover);
     border: 1px solid var(--border);
-    border-radius: 20px; /* Fully rounded capsule shape */
+    border-radius: 20px; 
     padding: 0 10px;
 }
 
-/* Remove default borders from buttons inside the capsule */
 .frame-group-capsule .mini-btn {
     background: transparent;
     border: none;
@@ -687,7 +628,7 @@ body {
     font-size: 11px;
     padding: 5px;
     border-radius: 4px;
-    flex: 1; /* Even spacing */
+    flex: 1; 
 }
 
 .frame-group-capsule .mini-btn:hover {
@@ -696,10 +637,105 @@ body {
 }
 
 .single-action-btn {
-    width: 60px; /* Matches width of other tools roughly */
+    width: 60px; 
     height: 100%;
-    /* Reuses existing tool-btn styles but ensures height matches */
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* --- SFX HORIZONTAL NAV BAR --- */
+.sfx-nav-bar {
+    display: flex;
+    gap: 6px; /* Tighter gap between buttons */
+    overflow-x: auto;
+    padding: 6px 4px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+    align-items: center;
+    
+    /* Scrollbar Styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.sfx-nav-bar::-webkit-scrollbar {
+    height: 2px; /* Thinner scrollbar */
+}
+
+/* --- ANIMATED PILL BUTTON --- */
+.sfx-cat-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Keeps letter centered when collapsed */
+    
+    /* "Very Small" Styling */
+    height: 22px; 
+    min-width: 22px; /* Ensures it stays a circle even if letter is thin */
+    border-radius: 11px; /* Half of height for perfect pill shape */
+    
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    
+    font-size: 11px; /* Smaller text */
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    user-select: none;
+    overflow: hidden;
+    
+    /* Smooth Transition */
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    
+    /* No padding initially (Collapsed State) */
+    padding: 0; 
+}
+
+/* The First Letter (No Fixed Width = No Gap) */
+.cat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* width: auto;  <-- Crucial: Let the letter define width */
+    height: 100%;
+    flex-shrink: 0;
+}
+
+/* The Rest of the Name (Hidden by default) */
+.cat-text {
+    max-width: 0;
+    opacity: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: max-width 0.3s ease-out, opacity 0.2s ease-out;
+}
+
+/* --- HOVER & ACTIVE STATES --- */
+
+.sfx-cat-btn:hover,
+.sfx-cat-btn.active {
+    background: var(--text-main);
+    color: var(--bg-deep);
+    border-color: var(--text-main);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    
+    /* Add padding when expanded so text doesn't touch edges */
+    padding: 0 8px; 
+    justify-content: flex-start; /* Align text to left when expanded */
+}
+
+.sfx-cat-btn.active {
+    background: var(--accent-sfx);
+    border-color: var(--accent-sfx);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(127, 0, 255, 0.6);
+}
+
+/* Reveal Text */
+.sfx-cat-btn:hover .cat-text,
+.sfx-cat-btn.active .cat-text {
+    max-width: 150px; 
+    opacity: 1;
+    /* No left margin needed because .cat-icon has no extra width now */
 }

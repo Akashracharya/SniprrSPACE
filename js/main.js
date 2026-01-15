@@ -20,8 +20,12 @@ let currentAudio = null;
 // --- PAGINATION VARIABLES ---
 let allFiles = [];      // Full list of files for category
 let currentPage = 0;    // Current page index
-const BATCH_SIZE = 9;   // Items per page
 let isLoading = false;  
+
+// Helper for Dynamic Batch Size (3x7 = 21 for SFX, 9 for others)
+function getBatchSize() {
+    return activeTab === 'SFX' ? 21 : 9;
+}
 
 function init() {
     setupTabs();
@@ -37,26 +41,16 @@ function init() {
     }
 
     // 2. Scroll Listener (Triggers Next Page)
-    // [REPLACE THIS SECTION IN init()] 
     const grid = document.getElementById('assetGrid');
     if (grid) {
-        // Remove old onscroll if it exists
         grid.onscroll = null; 
-
-        // Add Wheel Listener (Works even without scrollbar)
         grid.addEventListener('wheel', (e) => {
             if (isLoading || activeTab === 'MAIN') return;
-
-            // e.deltaY > 0 means Scrolling Down
-            // e.deltaY < 0 means Scrolling Up
-
             if (e.deltaY > 0) {
-                // NEXT PAGE: If at bottom OR no scrollbar
                 if(grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 5) {
                     nextPage();
                 }
             } else {
-                // PREV PAGE: If at top
                 if(grid.scrollTop <= 0) {
                     prevPage();
                 }
@@ -73,6 +67,9 @@ function setupTabs() {
     const browserView = document.getElementById('browserView');
     const toolsView = document.getElementById('toolsView');
     const toggleBtn = document.getElementById('sidebarToggle');
+    const sfxNavBar = document.getElementById('sfxNavBar');
+    const sidebar = document.getElementById('subFolderList');
+    const infoBar = document.getElementById('currentPathDisplay');
 
     tabs.forEach(tab => {
         tab.onclick = () => {
@@ -80,18 +77,32 @@ function setupTabs() {
             tab.classList.add('active');
             activeTab = tab.getAttribute('data-tab');
 
-            // --- Updated: Show Toggle Button for ALL Asset Tabs (SFX, GFX, PRESETS) ---
+            // Reset UI states
+            if (toggleBtn) toggleBtn.classList.add('hidden');
+            if (sfxNavBar) sfxNavBar.classList.add('hidden');
+            sidebar.classList.remove('visible');
+
             if (activeTab === 'MAIN') {
-                if(toggleBtn) toggleBtn.classList.add('hidden');
-                document.getElementById('subFolderList').classList.remove('visible'); 
-                
+                // MAIN TOOLS
                 browserView.classList.add('hidden');
                 toolsView.classList.remove('hidden');
+            } else if (activeTab === 'SFX') {
+                // SFX (New Horizontal Nav Layout + 3x7 Grid)
+                toolsView.classList.add('hidden');
+                browserView.classList.remove('hidden');
+                
+                sfxNavBar.classList.remove('hidden'); 
+                infoBar.style.marginLeft = "0"; 
+                
+                loadSFXCategories();
             } else {
-                if(toggleBtn) toggleBtn.classList.remove('hidden'); // Visible for SFX too now
+                // GFX & PRESETS (Classic Sidebar Layout)
+                if (toggleBtn) toggleBtn.classList.remove('hidden');
                 
                 toolsView.classList.add('hidden');
                 browserView.classList.remove('hidden');
+                
+                infoBar.style.marginLeft = "50px"; 
                 loadSidebar(activeTab); 
             }
         };
@@ -99,7 +110,6 @@ function setupTabs() {
 }
 
 function setupMainTools() {
-    // 1. Pre-compose Logic
     const btnPre = document.getElementById('btnPrecompose');
     if(btnPre) {
         btnPre.onclick = (e) => {
@@ -110,7 +120,6 @@ function setupMainTools() {
         };
     }
 
-    // 2. Solid Color Modal Logic
     const btnSolid = document.getElementById('btnSolid');
     const modal = document.getElementById('colorModal');
     const closeModal = document.getElementById('closeModal');
@@ -128,7 +137,6 @@ function setupMainTools() {
     });
 }
 
-// Global Wrappers
 window.runScript = function(funcName, arg1, arg2) {
     let script = `${funcName}()`;
     if (arg1 !== undefined && arg2 !== undefined) script = `${funcName}("${arg1}", "${arg2}")`;
@@ -139,6 +147,7 @@ window.runScript = function(funcName, arg1, arg2) {
     csInterface.evalScript(script);
 };
 
+// --- CLASSIC SIDEBAR LOADER (GFX/PRESETS) ---
 function loadSidebar(tabName) {
     const sidebar = document.getElementById('subFolderList');
     const folderPath = path.join(assetsRoot, tabName);
@@ -167,36 +176,82 @@ function loadSidebar(tabName) {
     });
 }
 
-// --- NEW PAGE LOGIC ---
+// --- NEW HORIZONTAL NAV LOADER (SFX) ---
+// --- NEW HORIZONTAL NAV LOADER (SFX) ---
+function loadSFXCategories() {
+    const navBar = document.getElementById('sfxNavBar');
+    const folderPath = path.join(assetsRoot, 'SFX');
+    navBar.innerHTML = '';
+
+    fs.readdir(folderPath, (err, files) => {
+        if (err) {
+            navBar.innerHTML = '<div style="padding:5px; opacity:0.5; font-size:10px;">No SFX found</div>';
+            return;
+        }
+        
+        // Filter only directories
+        const folders = files.filter(file => fs.statSync(path.join(folderPath, file)).isDirectory());
+        
+        folders.forEach((cat, index) => {
+            const btn = document.createElement('div');
+            btn.className = 'sfx-cat-btn';
+            
+            // 1. Get First Letter (The "Icon")
+            const firstLetter = cat.charAt(0).toUpperCase();
+            
+            // 2. Get Rest of Word (The "Hidden Part")
+            const restOfWord = cat.slice(1);
+            
+            // 3. Construct HTML
+            btn.innerHTML = `<span class="cat-icon">${firstLetter}</span><span class="cat-text">${restOfWord}</span>`;
+            
+            btn.onclick = () => {
+                // Remove active class from others
+                document.querySelectorAll('.sfx-cat-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                activeCategory = cat;
+                loadGrid('SFX', cat);
+            };
+            
+            navBar.appendChild(btn);
+            
+            // Auto-select first category
+            if(index === 0) btn.click();
+        });
+    });
+}
+
 function loadGrid(tabName, category) {
     const grid = document.getElementById('assetGrid');
     const folderPath = path.join(assetsRoot, tabName, category);
     const config = TAB_CONFIG[tabName];
 
-    // Layout
+    // Layout Switching
     grid.className = 'grid'; 
-    if (tabName === 'SFX') grid.classList.add('layout-list');
-    else grid.classList.add('layout-gallery');
+    if (tabName === 'SFX') {
+        grid.classList.add('layout-sfx-grid'); // New 3x7 Grid Layout
+    } else {
+        grid.classList.add('layout-gallery');
+    }
 
-    // Header
     const display = document.getElementById('currentPathDisplay');
     display.innerText = `${tabName} > ${category}`;
     display.style.color = config.color;
     
-    // Reset Data
     allFiles = [];
     currentPage = 0;
     
     fs.readdir(folderPath, (err, files) => {
         if (err) return;
-        
         allFiles = files.filter(file => config.types.includes(path.extname(file).toLowerCase()));
-        renderPage(0); // Load Page 1 (Index 0)
+        renderPage(0);
     });
 }
 
 function nextPage() {
-    const totalPages = Math.ceil(allFiles.length / BATCH_SIZE);
+    const batchSize = getBatchSize();
+    const totalPages = Math.ceil(allFiles.length / batchSize);
     if (currentPage < totalPages - 1) {
         currentPage++;
         renderPage(currentPage);
@@ -214,21 +269,16 @@ function renderPage(pageIndex) {
     const grid = document.getElementById('assetGrid');
     const folderPath = path.join(assetsRoot, activeTab, activeCategory);
     const config = TAB_CONFIG[activeTab];
+    const batchSize = getBatchSize(); // 21 for SFX, 9 for others
     
     isLoading = true;
-    grid.innerHTML = ''; // Clear previous items (Optimized RAM)
-    grid.scrollTop = 0;  // Reset scroll to top
+    grid.innerHTML = ''; 
+    grid.scrollTop = 0;  
 
-    // Slicing logic
-    const start = pageIndex * BATCH_SIZE;
-    const end = start + BATCH_SIZE;
+    const start = pageIndex * batchSize;
+    const end = start + batchSize;
     const batch = allFiles.slice(start, end);
 
-    // --- Navigation Controls (Top) ---
-    // Useful to go back since we cleared the grid
-    
-
-    // --- Render Items ---
     batch.forEach(file => {
         const fullPath = path.join(folderPath, file);
         const card = document.createElement('div');
@@ -237,6 +287,7 @@ function renderPage(pageIndex) {
         
         // --- CARD CONTENT ---
         if (activeTab === 'SFX') {
+            // SFX: Compact content for the grid
             card.innerHTML = `<div class="preset-placeholder" style="color:${config.color}">🔊</div><div class="card-label">${file}</div>`;
             card.onmouseenter = () => playAudio(fullPath);
             card.onmouseleave = () => stopAudio();
@@ -280,10 +331,7 @@ function renderPage(pageIndex) {
 }
 
 function updateFloatingPagination(pageIndex) {
-    // 1. Get or Create Container (attached to the grid-container, outside the scrollable grid)
     let container = document.getElementById('paginationFloat');
-    
-    // Create it if it doesn't exist yet
     if (!container) {
         container = document.createElement('div');
         container.id = 'paginationFloat';
@@ -291,11 +339,11 @@ function updateFloatingPagination(pageIndex) {
         document.querySelector('.grid-container').appendChild(container);
     }
     
-    container.innerHTML = ''; // Clear existing buttons
+    container.innerHTML = ''; 
 
-    const totalPages = Math.ceil(allFiles.length / BATCH_SIZE);
+    const batchSize = getBatchSize();
+    const totalPages = Math.ceil(allFiles.length / batchSize);
 
-    // 2. Add Prev Button (Up Arrow)
     if (pageIndex > 0) {
         const upBtn = document.createElement('div');
         upBtn.className = 'float-btn';
@@ -305,7 +353,6 @@ function updateFloatingPagination(pageIndex) {
         container.appendChild(upBtn);
     }
 
-    // 3. Add Next Button (Down Arrow)
     if (pageIndex < totalPages - 1) {
         const downBtn = document.createElement('div');
         downBtn.className = 'float-btn';
@@ -315,7 +362,6 @@ function updateFloatingPagination(pageIndex) {
         container.appendChild(downBtn);
     }
 }
-
 
 function playAudio(path) {
     stopAudio();

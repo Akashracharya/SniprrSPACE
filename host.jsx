@@ -13,19 +13,19 @@ function importFile(filePath) {
 
         var io = new ImportOptions(new File(filePath));
         var importedItem = app.project.importFile(io);
-        
+
         var layer = comp.layers.add(importedItem);
-        
+
         // 1. Set Start Time
         // If a layer is selected, match its start time? Or stick to CTI?
         // Usually imports go to CTI (Current Time Indicator).
         layer.startTime = comp.time;
-        
+
         // 2. Place Above Selected Layer
         if (targetLayer) {
             layer.moveBefore(targetLayer);
         }
-        
+
         // Auto-label colors
         if (filePath.match(/\.(mp3|wav|aiff)$/i)) layer.label = 11; // Orange for SFX
         else layer.label = 9; // Blue for video
@@ -45,10 +45,10 @@ function applyPreset(presetPath) {
         if (!comp || !(comp instanceof CompItem)) return;
         var presetFile = new File(presetPath);
         if (!presetFile.exists) return;
-        var solid = comp.layers.addSolid([1,1,1], "Sniprr Effect", comp.width, comp.height, comp.pixelAspect, comp.duration);
+        var solid = comp.layers.addSolid([1, 1, 1], "Sniprr Effect", comp.width, comp.height, comp.pixelAspect, comp.duration);
         solid.adjustmentLayer = true;
         solid.startTime = comp.time;
-        solid.label = 5; 
+        solid.label = 5;
         solid.applyPreset(presetFile);
     } catch (err) { alert(err.toString()); }
     app.endUndoGroup();
@@ -73,7 +73,7 @@ function createLayer(type, colorHex, userLabel) {
     var w = comp.width;
     var h = comp.height;
     var pa = comp.pixelAspect;
-    var duration = comp.duration; 
+    var duration = comp.duration;
     var startT = (target) ? target.inPoint : comp.time;
     if (target) duration = target.outPoint - target.inPoint;
 
@@ -93,31 +93,38 @@ function createLayer(type, colorHex, userLabel) {
     var col = [0.5, 0.5, 0.5];
     if (colorHex) {
         var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(colorHex);
-        if (result) col = [parseInt(result[1], 16)/255, parseInt(result[2], 16)/255, parseInt(result[3], 16)/255];
+        if (result) col = [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
     }
 
     var newLayer = null;
     try {
-        switch(type) {
+        switch (type) {
             case 'adjustment':
                 // Pass finalName to addSolid so the Project Item is named correctly
-                newLayer = comp.layers.addSolid([1,1,1], finalName, w, h, pa, duration);
+                newLayer = comp.layers.addSolid([1, 1, 1], finalName, w, h, pa, duration);
                 newLayer.adjustmentLayer = true;
-                newLayer.label = 5; 
+                newLayer.label = 5;
                 break;
-                
+
             case 'solid':
                 newLayer = comp.layers.addSolid(col, finalName, w, h, pa, duration);
                 break;
-                
+
             case 'null':
                 newLayer = comp.layers.addNull();
                 break;
-                
+
             case 'camera':
-                newLayer = comp.layers.addCamera(finalName, [comp.width/2, comp.height/2]);
+                var camLayer = comp.layers.addCamera("Camera", [comp.width / 2, comp.height / 2]);
+
+                // Select camera
+                camLayer.selected = true;
+
+                // Open Effect Controls (Camera Settings live here)
+                app.executeCommand(2004);
+
                 break;
-                
+
             case 'text':
                 // Pass finalName as the source text content
                 newLayer = comp.layers.addText(finalName);
@@ -133,12 +140,12 @@ function createLayer(type, colorHex, userLabel) {
                 newLayer.startTime = target.startTime;
                 newLayer.inPoint = target.inPoint;
                 newLayer.outPoint = target.outPoint;
-                newLayer.moveBefore(target); 
+                newLayer.moveBefore(target);
             } else {
                 newLayer.startTime = startT;
             }
         }
-    } catch(err) { alert(err.toString()); }
+    } catch (err) { alert(err.toString()); }
     app.endUndoGroup();
 }
 
@@ -172,17 +179,17 @@ function doPrecompose(individual, userLabel) {
             var inP = layer.inPoint;
             var outP = layer.outPoint;
             var dur = outP - inP;
-            
+
             // Generate Name
             var baseName = (userLabel && userLabel !== "") ? userLabel : layer.name;
-            var finalName = baseName + " Comp " + (i+1);
-            
+            var finalName = baseName + " Comp " + (i + 1);
+
             var newComp = comp.layers.precompose([idx], finalName, true);
             var newLayer = comp.selectedLayers[0]; // The new precomp layer
-            
+
             // Rename the Layer inside the main comp
-            if (userLabel && userLabel !== "") newLayer.name = userLabel + " " + (i+1);
-            
+            if (userLabel && userLabel !== "") newLayer.name = userLabel + " " + (i + 1);
+
             trimPrecomp(newComp, newLayer, inP, dur);
         }
 
@@ -191,22 +198,22 @@ function doPrecompose(individual, userLabel) {
         var indices = [];
         var minIn = 999999;
         var maxOut = -999999;
-        
+
         for (var i = 0; i < sel.length; i++) {
             indices.push(sel[i].index);
             if (sel[i].inPoint < minIn) minIn = sel[i].inPoint;
             if (sel[i].outPoint > maxOut) maxOut = sel[i].outPoint;
         }
-        
+
         var dur = maxOut - minIn;
         var pName = (userLabel && userLabel !== "") ? userLabel : "Pre-comp";
-        
+
         var newComp = comp.layers.precompose(indices, pName, true);
         var newLayer = comp.selectedLayers[0];
-        
+
         // Rename the Layer explicitly
         if (userLabel && userLabel !== "") newLayer.name = userLabel;
-        
+
         trimPrecomp(newComp, newLayer, minIn, dur);
     }
     app.endUndoGroup();
@@ -218,54 +225,69 @@ function doPrecompose(individual, userLabel) {
 // 6. FIT TO COMP (Fixed: No Shrink, Maintain Aspect)
 function fitToComp() {
     app.beginUndoGroup("Sniprr Fit");
+
     var comp = app.project.activeItem;
-    if (!comp || !(comp instanceof CompItem)) return;
+    if (!(comp && comp instanceof CompItem)) {
+        app.endUndoGroup();
+        return;
+    }
+
     var sel = comp.selectedLayers;
-    
+    if (sel.length === 0) {
+        app.endUndoGroup();
+        return;
+    }
+
+    var t = comp.time;
+
     for (var i = 0; i < sel.length; i++) {
         var layer = sel[i];
-        
-        // Skip cameras/lights/audio
-        if(!layer.source && layer.source !== null) continue; 
-        
-        // Reset scale momentarily to get true dimensions
-        var oldScale = layer.transform.scale.value;
-        layer.transform.scale.setValue([100,100,100]); 
-        
-        var rect = layer.sourceRectAtTime(comp.time, false);
-        
-        // Calculate Scale Factors
-        var scaleX = (comp.width / rect.width) * 100;
-        var scaleY = (comp.height / rect.height) * 100;
-        
-        // "Do not shrink... keep ratio" implies we want to cover the screen 
-        // OR fit inside without distortion? 
-        // Usually "Fit to Comp" means "Fit Inside" (Letterbox). 
-        // "Fill Comp" means "Cover" (Crop).
-        // Based on "should not shrink the whole video", I assume "Fill/Cover" is preferred, 
-        // or ensuring it's at least 100%?
-        // Let's stick to standard "Fit Inside" (Math.min) as it's safer, 
-        // but if the user wants "No shrink", maybe they mean "Fill"? 
-        // Let's use Math.min (Fit) as per standard behavior, but ensure 3D layers handled.
-        
-        var finalScale = scaleY;
-        
-        // Handle 3D Layers (Scale has 3 values)
-        if (layer.threeDLayer) {
-             layer.transform.scale.setValue([finalScale, finalScale, 100]);
+
+        // Skip locked layers
+        if (layer.locked) continue;
+
+        // Skip cameras & lights
+        if (layer instanceof CameraLayer || layer instanceof LightLayer) continue;
+
+        // Reset scale to get true dimensions
+        layer.transform.scale.setValue(layer.threeDLayer ? [100, 100, 100] : [100, 100]);
+
+        var rect = layer.sourceRectAtTime(t, false);
+        if (!rect || rect.width === 0 || rect.height === 0) continue;
+
+        // Aspect ratios
+        var layerAR = rect.width / rect.height;
+        var compAR = comp.width / comp.height;
+
+        var scale;
+
+        // Decide fit based on dominant dimension
+        if (layerAR > compAR) {
+            // Wider → fit by width
+            scale = (comp.width / rect.width) * 100;
         } else {
-             layer.transform.scale.setValue([finalScale, finalScale]);
+            // Taller → fit by height
+            scale = (comp.height / rect.height) * 100;
         }
-        
-        // Center
+
+        // Apply scale
         if (layer.threeDLayer) {
-             layer.transform.position.setValue([comp.width/2, comp.height/2, 0]);
+            layer.transform.scale.setValue([scale, scale, 100]);
         } else {
-             layer.transform.position.setValue([comp.width/2, comp.height/2]);
+            layer.transform.scale.setValue([scale, scale]);
+        }
+
+        // Center layer
+        if (layer.threeDLayer) {
+            layer.transform.position.setValue([comp.width / 2, comp.height / 2, 0]);
+        } else {
+            layer.transform.position.setValue([comp.width / 2, comp.height / 2]);
         }
     }
+
     app.endUndoGroup();
 }
+
 
 // 7. ANCHOR POINT (Fixed: Robust 2D/3D Math)
 function setAnchorPoint(posIndex) {
@@ -277,15 +299,15 @@ function setAnchorPoint(posIndex) {
     for (var n = 0; n < sel.length; n++) {
         var layer = sel[n];
         var rect = layer.sourceRectAtTime(comp.time, false);
-        
+
         // 1. Calculate Target Anchor Point (Local Space)
         var newX = rect.left;
         var newY = rect.top;
-        
+
         // Horizontal
         if (posIndex === 1 || posIndex === 4 || posIndex === 7) newX += rect.width / 2;
         if (posIndex === 2 || posIndex === 5 || posIndex === 8) newX += rect.width;
-        
+
         // Vertical
         if (posIndex === 3 || posIndex === 4 || posIndex === 5) newY += rect.height / 2;
         if (posIndex === 6 || posIndex === 7 || posIndex === 8) newY += rect.height;
@@ -298,36 +320,36 @@ function setAnchorPoint(posIndex) {
 
         // 3. Compensate Position (so layer doesn't visually jump)
         // We must apply Scale and Rotation to the Delta
-        
+
         var curScale = layer.transform.scale.value;
-        var curRot = layer.transform.rotation.value; 
-        
+        var curRot = layer.transform.rotation.value;
+
         // Convert Scale to factor
         var sX = curScale[0] / 100;
         var sY = curScale[1] / 100;
-        
+
         // Apply Scale
         var dX = delta[0] * sX;
         var dY = delta[1] * sY;
-        
+
         // Apply Rotation (Degrees to Radians)
         var rad = curRot * (Math.PI / 180);
         var cos = Math.cos(rad);
         var sin = Math.sin(rad);
-        
+
         var rotDX = (dX * cos) - (dY * sin);
         var rotDY = (dX * sin) + (dY * cos);
-        
+
         // Add to current Position
         var curPos = layer.transform.position.value;
-        
+
         // Handle 2D vs 3D Position Arrays
         if (layer.threeDLayer) {
-             layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1], curAnchor[2]]);
-             layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY, curPos[2]]);
+            layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1], curAnchor[2]]);
+            layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY, curPos[2]]);
         } else {
-             layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1]]);
-             layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY]);
+            layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1]]);
+            layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY]);
         }
     }
     app.endUndoGroup();
@@ -359,33 +381,52 @@ function deleteSelectedLayers() {
 // 10. TRIM LAYERS (Fixed: Only trims if CTI is inside the layer)
 function trimSelectedLayers(side) {
     app.beginUndoGroup("Sniprr Trim " + side);
+
     var comp = app.project.activeItem;
-    if (comp && comp.selectedLayers.length > 0) {
-        var sel = comp.selectedLayers;
-        var t = comp.time;
-        
-        for (var i = 0; i < sel.length; i++) {
-            var layer = sel[i];
-            
-            // TRIM LEFT ( [ )
-            if (side === 'left') {
-                // Only trim if time is AFTER the start and BEFORE the end
-                // This prevents it from 'Extending' backwards or erroring
-                if (t > layer.inPoint && t < layer.outPoint) {
-                    layer.inPoint = t;
-                }
-            } 
-            // TRIM RIGHT ( ] )
-            else if (side === 'right') {
-                // Only trim if time is AFTER the start and BEFORE the end
-                if (t > layer.inPoint && t < layer.outPoint) {
-                    layer.outPoint = t;
-                }
+    if (!(comp && comp instanceof CompItem)) {
+        app.endUndoGroup();
+        return;
+    }
+
+    var sel = comp.selectedLayers;
+    if (sel.length === 0) {
+        app.endUndoGroup();
+        return;
+    }
+
+    // Frame-safe time
+    var frameDur = comp.frameDuration;
+    var t = Math.round(comp.time / frameDur) * frameDur;
+
+    for (var i = 0; i < sel.length; i++) {
+        var layer = sel[i];
+
+        // Skip locked layers
+        if (layer.locked) continue;
+
+        var inP = layer.inPoint;
+        var outP = layer.outPoint;
+
+        // TRIM LEFT  [
+        if (side === "left") {
+            if (t > inP && t < outP) {
+                layer.inPoint = t;
+                layer.outPoint = outP; // lock right edge
+            }
+        }
+
+        // TRIM RIGHT ]
+        else if (side === "right") {
+            if (t > inP && t < outP) {
+                layer.outPoint = t;
+                layer.inPoint = inP; // lock left edge
             }
         }
     }
+
     app.endUndoGroup();
 }
+
 
 // 5. BLENDING MODE
 function setBlendingMode(modeName) {
@@ -399,6 +440,6 @@ function setBlendingMode(modeName) {
                 // You can add other modes here later (e.g., SCREEN, OVERLAY)
             }
         }
-    } catch(err) { alert(err.toString()); }
+    } catch (err) { alert(err.toString()); }
     app.endUndoGroup();
 }

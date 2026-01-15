@@ -671,8 +671,8 @@ body {
     
     /* "Very Small" Styling */
     height: 22px; 
-    min-width: 22px; /* Ensures it stays a circle even if letter is thin */
-    border-radius: 11px; /* Half of height for perfect pill shape */
+    min-width: 24px; /* Ensures it stays a circle even if letter is thin */
+    border-radius: 12px; /* Half of height for perfect pill shape */
     
     background: var(--bg-hover);
     border: 1px solid var(--border);
@@ -686,7 +686,7 @@ body {
     overflow: hidden;
     
     /* Smooth Transition */
-    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     
     /* No padding initially (Collapsed State) */
     padding: 0; 
@@ -708,7 +708,7 @@ body {
     opacity: 0;
     white-space: nowrap;
     overflow: hidden;
-    transition: max-width 0.3s ease-out, opacity 0.2s ease-out;
+    transition: max-width 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease-out;
 }
 
 /* --- HOVER & ACTIVE STATES --- */
@@ -735,7 +735,7 @@ body {
 /* Reveal Text */
 .sfx-cat-btn:hover .cat-text,
 .sfx-cat-btn.active .cat-text {
-    max-width: 150px; 
+    max-width: 200px; 
     opacity: 1;
     /* No left margin needed because .cat-icon has no extra width now */
 }

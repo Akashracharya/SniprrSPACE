@@ -647,67 +647,70 @@ body {
 /* --- SFX HORIZONTAL NAV BAR --- */
 .sfx-nav-bar {
     display: flex;
-    gap: 6px; /* Tighter gap between buttons */
-    overflow-x: auto;
+    /* THE FIX: Centering the group forces "even" expansion (Left moves Left, Right moves Right) */
+    justify-content: center;
+    gap: 6px; 
+    
+    overflow-x: auto; /* Safety scroll if screen is too small */
     padding: 6px 4px;
     margin-bottom: 6px;
     flex-shrink: 0;
     align-items: center;
     
-    /* Scrollbar Styling */
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .sfx-nav-bar::-webkit-scrollbar {
-    height: 2px; /* Thinner scrollbar */
+    height: 2px;
 }
 
 /* --- ANIMATED PILL BUTTON --- */
 .sfx-cat-btn {
     display: flex;
     align-items: center;
-    justify-content: center; /* Keeps letter centered when collapsed */
+    justify-content: center; 
     
     /* "Very Small" Styling */
     height: 22px; 
-    min-width: 24px; /* Ensures it stays a circle even if letter is thin */
-    border-radius: 12px; /* Half of height for perfect pill shape */
+    min-width: 22px; 
+    border-radius: 11px;
     
     background: var(--bg-hover);
     border: 1px solid var(--border);
     color: var(--text-muted);
     
-    font-size: 11px; /* Smaller text */
+    font-size: 11px;
     font-weight: 700;
     cursor: pointer;
     text-transform: uppercase;
     user-select: none;
     overflow: hidden;
     
-    /* Smooth Transition */
+    /* Super Smooth Transition */
     transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     
-    /* No padding initially (Collapsed State) */
+    /* Start with NO padding (Circle shape) */
     padding: 0; 
 }
 
-/* The First Letter (No Fixed Width = No Gap) */
+/* The First Letter */
 .cat-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* width: auto;  <-- Crucial: Let the letter define width */
     height: 100%;
     flex-shrink: 0;
 }
 
-/* The Rest of the Name (Hidden by default) */
+/* The Rest of the Name */
 .cat-text {
     max-width: 0;
     opacity: 0;
     white-space: nowrap;
     overflow: hidden;
+    
+    /* Sync exactly with parent transition */
     transition: max-width 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease-out;
 }
 
@@ -718,18 +721,17 @@ body {
     background: var(--text-main);
     color: var(--bg-deep);
     border-color: var(--text-main);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     
-    /* Add padding when expanded so text doesn't touch edges */
-    padding: 0 8px; 
-    justify-content: flex-start; /* Align text to left when expanded */
+    /* Symmetrical Padding: Pushes icon left and text right evenly */
+    padding: 0 14px; 
 }
 
 .sfx-cat-btn.active {
     background: var(--accent-sfx);
     border-color: var(--accent-sfx);
     color: #fff;
-    box-shadow: 0 0 8px rgba(127, 0, 255, 0.6);
+    box-shadow: 0 0 10px rgba(127, 0, 255, 0.6);
 }
 
 /* Reveal Text */
@@ -737,5 +739,4 @@ body {
 .sfx-cat-btn.active .cat-text {
     max-width: 200px; 
     opacity: 1;
-    /* No left margin needed because .cat-icon has no extra width now */
 }

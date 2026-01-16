@@ -115,14 +115,24 @@ function createLayer(type, colorHex, userLabel) {
                 break;
 
             case 'camera':
-                var camLayer = comp.layers.addCamera("Camera", [comp.width / 2, comp.height / 2]);
-
-                // Select camera
-                camLayer.selected = true;
-
-                // Open Effect Controls (Camera Settings live here)
-                app.executeCommand(2004);
-
+                // FIX: Open Native "New Camera" Dialog to show options
+                var countBefore = comp.numLayers;
+                app.executeCommand(app.findMenuCommandId("Camera..."));
+                
+                // If user clicked "OK" (layer count increased), grab the new camera
+                if (comp.numLayers > countBefore) {
+                    newLayer = comp.selectedLayers[0];
+                    
+                    // If the user typed a specific name in the panel, use it.
+                    // If the panel input was empty (using default "Camera"), 
+                    // we keep the name they chose in the dialog.
+                    if (userLabel && userLabel !== "") {
+                        newLayer.name = finalName;
+                    }
+                    
+                    // Prevent the code below from overwriting the name again if we just handled it
+                    finalName = newLayer.name; 
+                }
                 break;
 
             case 'text':

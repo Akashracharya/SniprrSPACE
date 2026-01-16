@@ -171,7 +171,7 @@ body {
     border-radius: 6px;
     width: 100%;
     box-sizing: border-box; 
-    margin-bottom: 12px;
+    margin-bottom: 1px;
     
     font-family: 'Segoe UI', sans-serif;
     font-size: 11px;
@@ -301,7 +301,7 @@ body {
     grid-template-columns: repeat(4, 1fr) !important;
     gap: 5px; /* Tighter gap to fit them nicely */
     width: 100%;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 /* Tool Buttons (Smaller text to fit 4 columns) */
@@ -757,6 +757,9 @@ body {
 .pre-comp-btn{
     width: 80px;
     height: 39px;
+}
+.pre-comp-btn:hover{
+    background: rgb(204, 184, 0);
 }
 /* --- SFX HORIZONTAL NAV BAR --- */
 .sfx-nav-bar {

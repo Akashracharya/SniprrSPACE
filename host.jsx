@@ -354,6 +354,34 @@ function setAnchorPoint(posIndex) {
     }
     app.endUndoGroup();
 }
+// [APPEND TO BOTTOM OF host.jsx]
+
+// 11. MOVE LAYER IN/OUT (INP / OUTP Buttons)
+function moveLayerPoint(type) {
+    app.beginUndoGroup("Sniprr Move " + type);
+    var comp = app.project.activeItem;
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        var t = comp.time;
+        
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            
+            if (type === 'in') {
+                // Calculate difference between current InPoint and CTI
+                var offset = t - layer.inPoint;
+                // Move the layer by that amount
+                layer.startTime += offset;
+            } 
+            else if (type === 'out') {
+                // Calculate difference between current OutPoint and CTI
+                var offset = t - layer.outPoint;
+                layer.startTime += offset;
+            }
+        }
+    }
+    app.endUndoGroup();
+}
 
 // 8. MOVE CTI (Frames)
 function moveCTI(deltaFrames) {

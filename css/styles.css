@@ -756,7 +756,7 @@ body {
 
 .pre-comp-btn{
     width: 80px;
-    height: 37px;
+    height: 39px;
 }
 /* --- SFX HORIZONTAL NAV BAR --- */
 .sfx-nav-bar {
@@ -891,7 +891,7 @@ body {
     display: grid;
     /* Change from 5 cols to 3 cols to fit narrower space */
     grid-template-columns: repeat(3, 1fr); 
-    gap: 6px;
+    gap: 8px;
     width: 100%;
 }
 

@@ -149,17 +149,33 @@ body {
 .mini-btn {
     flex: 1;
     background: var(--bg-hover);
-    border: 1px solid var(--border);
     color: var(--text-dim);
-    padding: 4px 0;
-    font-size: 13px;
+    padding: 6px 0;
+    font-size: 11px;
+    font-weight: bold;
     border-radius: 4px;
     cursor: pointer;
     user-select: none;
+    
+    /* --- 3D MINI --- */
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 
+        0 3px 0 #000000,
+        0 3px 6px rgba(0,0,0,0.3);
+        
+    transition: all 0.1s ease;
+    margin-bottom: 3px; /* Compensate for 3px shadow */
 }
+
 .mini-btn:hover {
     background: var(--text-main);
     color: var(--bg-deep);
+}
+
+.mini-btn:active {
+    transform: translateY(3px);
+    box-shadow: none;
 }
 
 /* Edit Grid (Delete/Split) */
@@ -215,29 +231,48 @@ body {
 /* Tool Buttons */
 .tool-btn {
     background: var(--bg-hover);
-    border: 1px solid var(--border);
     color: var(--text-main);
     padding: 8px 1px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 10px;
-    font-weight: bold;
+    font-weight: 800;
     text-transform: uppercase;
-    transition: 0.2s;
     text-align: center;
     user-select: none;
+    
+    /* --- 3D MAGIC --- */
+    border: none; /* Remove flat border */
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Top Highlight */
+    
+    /* The "Height" of the button */
+    box-shadow: 
+        0 4px 0 #000000,          /* The hard dark edge (Physical depth) */
+        0 5px 10px rgba(0,0,0,0.5); /* Soft shadow on the 'floor' */
+        
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Important: Push button up slightly so shadow doesn't overlap elements below */
+    margin-bottom: 4px; 
 }
 
 .tool-btn:hover {
-    background: var(--text-main);
-    color: var(--bg-deep);
-    border-color: var(--text-main);
+    background: var(--bg-active);
+    transform: translateY(-1px); /* Slight lift on hover */
+    box-shadow: 
+        0 5px 0 #000000, 
+        0 6px 12px rgba(0,0,0,0.6);
 }
 
 .tool-btn:active {
-    transform: scale(0.98);
+    /* PRESS EFFECT */
+    transform: translateY(4px); /* Push down exactly the height of the shadow */
+    box-shadow: 
+        0 0 0 #000000, /* Shadow disappears (squished) */
+        0 0 0 rgba(0,0,0,0);
+        
+    border-top-color: transparent; /* Dim the highlight */
 }
-
 /* --- COLOR PICKER MODAL --- */
 .color-modal {
     position: absolute;
@@ -550,33 +585,40 @@ body {
 }
 
 .float-btn {
-    width: 25px;
-    height: 25px;
-    border-radius: 5px; 
-    background: rgba(20, 20, 20, 0.6); 
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%; /* Make them perfectly round for 3D */
+    
+    background: var(--bg-hover); 
     color: rgba(255, 255, 255, 0.9);
     font-size: 12px;
+    
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
     user-select: none;
+    
+    /* --- 3D FLOATER --- */
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 
+        0 4px 0 #000000,
+        0 5px 15px rgba(0,0,0,0.5);
+        
+    transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy spring */
 }
 
 .float-btn:hover {
-    background: rgba(127, 0, 255, 0.8); 
-    border-color: rgba(255, 255, 255, 0.5);
+    background: var(--accent-sfx);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    box-shadow: 
+        0 6px 0 #000000,
+        0 8px 20px rgba(0,0,0,0.6);
 }
 
 .float-btn:active {
-    transform: scale(0.95);
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #000000;
 }
 
 /* --- MIXED ROW --- */
@@ -648,15 +690,17 @@ body {
     align-items: center;
     justify-content: center; 
     
-    /* "Very Small" Styling */
     height: 22px; 
     min-width: 22px; 
     border-radius: 11px;
     
     background: var(--bg-hover);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
+    /* 3D Border Lighting */
+    border: 1px solid rgba(0,0,0,0.5); 
+    border-top: 1px solid rgba(255,255,255,0.15); /* Top highlight */
+    border-bottom: 1px solid rgba(0,0,0,0.8);    /* Bottom shadow */
     
+    color: var(--text-muted);
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
@@ -664,10 +708,11 @@ body {
     user-select: none;
     overflow: hidden;
     
-    /* Super Smooth Transition */
     transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-    
     padding: 0; 
+    
+    /* 3D Drop Shadow */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
 }
 
 /* The First Letter */
@@ -696,17 +741,22 @@ body {
 .sfx-cat-btn.active {
     background: var(--text-main);
     color: var(--bg-deep);
-    border-color: var(--text-main);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     
+    /* Lift effect */
+    box-shadow: 
+        0 5px 15px rgba(0, 0, 0, 0.6),
+        inset 0 -2px 0 rgba(0,0,0,0.1); /* Inner bottom shade */
+        
     padding: 0 14px; 
+    transform: translateY(-1px); /* Slight float up */
 }
 
 .sfx-cat-btn.active {
     background: var(--accent-sfx);
     border-color: var(--accent-sfx);
     color: #fff;
-    box-shadow: 0 0 10px rgba(127, 0, 255, 0.6);
+    /* Glow */
+    box-shadow: 0 0 15px rgba(127, 0, 255, 0.5);
 }
 
 /* Reveal Text */

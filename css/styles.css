@@ -757,6 +757,7 @@ body {
 .pre-comp-btn{
     width: 80px;
     height: 39px;
+    margin-left: 3px;
 }
 .pre-comp-btn:hover{
     background: rgb(204, 184, 0);

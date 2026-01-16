@@ -415,57 +415,41 @@ function deleteSelectedLayers() {
     app.endUndoGroup();
 }
 
-// 10. TRIM LAYERS (Split Left / Split Right)
-// 10. TRIM LAYERS (Fixed: Only trims if CTI is inside the layer)
+
 function trimSelectedLayers(side) {
     app.beginUndoGroup("Sniprr Trim " + side);
-
     var comp = app.project.activeItem;
-    if (!(comp && comp instanceof CompItem)) {
-        app.endUndoGroup();
-        return;
-    }
-
-    var sel = comp.selectedLayers;
-    if (sel.length === 0) {
-        app.endUndoGroup();
-        return;
-    }
-
-    // Frame-safe time
-    var frameDur = comp.frameDuration;
-    var t = Math.round(comp.time / frameDur) * frameDur;
-
-    for (var i = 0; i < sel.length; i++) {
-        var layer = sel[i];
-
-        // Skip locked layers
-        if (layer.locked) continue;
-
-        var inP = layer.inPoint;
-        var outP = layer.outPoint;
-
-        // TRIM LEFT  [
-        if (side === "left") {
-            if (t > inP && t < outP) {
-                layer.inPoint = t;
-                layer.outPoint = outP; // lock right edge
-            }
-        }
-
-        // TRIM RIGHT ]
-        else if (side === "right") {
-            if (t > inP && t < outP) {
-                layer.outPoint = t;
-                layer.inPoint = inP; // lock left edge
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        var t = comp.time;
+        
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            
+            try {
+                // TRIM LEFT ( [ ) -> Sets In Point
+                // Goal: Layer starts at CTI.
+                // Condition: CTI must be BEFORE the current Out Point.
+                if (side === 'left') {
+                    if (t < layer.outPoint) {
+                        layer.inPoint = t;
+                    }
+                } 
+                // TRIM RIGHT ( ] ) -> Sets Out Point
+                // Goal: Layer ends at CTI.
+                // Condition: CTI must be AFTER the current In Point.
+                else if (side === 'right') {
+                    if (t > layer.inPoint) {
+                        layer.outPoint = t;
+                    }
+                }
+            } catch(e) {
+                // Ignore errors (prevents crash if layer is locked/invalid)
             }
         }
     }
-
     app.endUndoGroup();
 }
-
-
 // 5. BLENDING MODE
 function setBlendingMode(modeName) {
     app.beginUndoGroup("Sniprr Blend Mode");

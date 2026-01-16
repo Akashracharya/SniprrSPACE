@@ -368,15 +368,15 @@ body {
 
 .sidebar-toggle {
     position: absolute;
-    top: 58px;
+    top: 0px;
     left: 10px;
     z-index: 60; 
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 25px;
-    height: 20px;
-    border-radius: 4px; 
+    width: 30px;
+    height: 30px;
+    border-radius: 5px; 
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);

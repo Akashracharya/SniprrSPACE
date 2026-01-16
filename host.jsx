@@ -290,6 +290,12 @@ function fitToComp() {
 
 
 // 7. ANCHOR POINT (Fixed: Robust 2D/3D Math)
+// [PARTIAL UPDATE - Replace the existing setAnchorPoint function]
+
+// 7. ANCHOR POINT (Standard 1-9 Grid Logic)
+// 1 2 3
+// 4 5 6
+// 7 8 9
 function setAnchorPoint(posIndex) {
     app.beginUndoGroup("Sniprr Anchor");
     var comp = app.project.activeItem;
@@ -299,57 +305,51 @@ function setAnchorPoint(posIndex) {
     for (var n = 0; n < sel.length; n++) {
         var layer = sel[n];
         var rect = layer.sourceRectAtTime(comp.time, false);
-
-        // 1. Calculate Target Anchor Point (Local Space)
+        
+        // 1. Calculate Target X
         var newX = rect.left;
+        if (posIndex === 2 || posIndex === 5 || posIndex === 8) newX += rect.width / 2; // Center Cols
+        if (posIndex === 3 || posIndex === 6 || posIndex === 9) newX += rect.width;     // Right Cols
+        
+        // 2. Calculate Target Y
         var newY = rect.top;
+        if (posIndex === 4 || posIndex === 5 || posIndex === 6) newY += rect.height / 2; // Middle Rows
+        if (posIndex === 7 || posIndex === 8 || posIndex === 9) newY += rect.height;     // Bottom Rows
 
-        // Horizontal
-        if (posIndex === 1 || posIndex === 4 || posIndex === 7) newX += rect.width / 2;
-        if (posIndex === 2 || posIndex === 5 || posIndex === 8) newX += rect.width;
+        var newAnchor = [newX, newY, 0];
 
-        // Vertical
-        if (posIndex === 3 || posIndex === 4 || posIndex === 5) newY += rect.height / 2;
-        if (posIndex === 6 || posIndex === 7 || posIndex === 8) newY += rect.height;
-
-        var newAnchor = [newX, newY, 0]; // Assume z=0 for anchor initially
-
-        // 2. Calculate Offset (How much the Anchor Point moved)
+        // 3. Compensation Math (Keep Layer in Visual Place)
         var curAnchor = layer.transform.anchorPoint.value;
         var delta = [newAnchor[0] - curAnchor[0], newAnchor[1] - curAnchor[1]];
-
-        // 3. Compensate Position (so layer doesn't visually jump)
-        // We must apply Scale and Rotation to the Delta
-
+        
         var curScale = layer.transform.scale.value;
-        var curRot = layer.transform.rotation.value;
-
-        // Convert Scale to factor
+        var curRot = layer.transform.rotation.value; 
+        
+        // Convert Scale % to decimal factor
         var sX = curScale[0] / 100;
         var sY = curScale[1] / 100;
-
-        // Apply Scale
-        var dX = delta[0] * sX;
-        var dY = delta[1] * sY;
-
-        // Apply Rotation (Degrees to Radians)
+        
+        // Apply Rotation
         var rad = curRot * (Math.PI / 180);
         var cos = Math.cos(rad);
         var sin = Math.sin(rad);
-
+        
+        // Rotate the delta offset
+        var dX = delta[0] * sX;
+        var dY = delta[1] * sY;
+        
         var rotDX = (dX * cos) - (dY * sin);
         var rotDY = (dX * sin) + (dY * cos);
-
-        // Add to current Position
+        
         var curPos = layer.transform.position.value;
-
-        // Handle 2D vs 3D Position Arrays
+        
+        // Apply values
         if (layer.threeDLayer) {
-            layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1], curAnchor[2]]);
-            layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY, curPos[2]]);
+             layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1], curAnchor[2]]);
+             layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY, curPos[2]]);
         } else {
-            layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1]]);
-            layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY]);
+             layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1]]);
+             layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY]);
         }
     }
     app.endUndoGroup();

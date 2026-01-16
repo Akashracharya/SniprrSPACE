@@ -220,8 +220,8 @@ body {
 
 .mini-btn {
     flex: 1;
-    background: var(--bg-hover);
-    color: var(--text-dim);
+    background: black;
+    color: white;
     padding: 6px 0;
     font-size: 11px;
     font-weight: bold;
@@ -233,8 +233,8 @@ body {
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 
-        0 3px 0 #000000,
-        0 3px 6px rgba(0,0,0,0.3);
+        0 3px 0 #0f0f0f,
+        0 3px 6px rgba(19, 19, 19, 0.3);
         
     transition: all 0.1s ease;
     margin-bottom: 3px; /* Compensate for 3px shadow */
@@ -294,57 +294,61 @@ body {
 }
 
 /* Compact Grid for Tools */
+/* Compact Grid for Tools (4 Columns) */
 .compact-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr); 
-    gap: 8px;
+    /* CHANGE: repeat(4, 1fr) forces exactly 4 items per row */
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 5px; /* Tighter gap to fit them nicely */
     width: 100%;
+    margin-bottom: 8px;
 }
 
-/* Tool Buttons */
+/* Tool Buttons (Smaller text to fit 4 columns) */
 .tool-btn {
     background: var(--bg-hover);
     color: var(--text-main);
-    padding: 8px 1px;
-    border-radius: 6px;
+    padding: 6px 1px; /* Less horizontal padding */
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 10px;
+    height: 35px;
+    /* Smaller font is crucial for "PRE-COMP" to fit in 1/4th width */
+    font-size: 10px; 
     font-weight: 800;
     text-transform: uppercase;
     text-align: center;
     user-select: none;
+    letter-spacing: 0px; 
     
-    /* --- 3D MAGIC --- */
-    border: none; /* Remove flat border */
-    border-top: 2px solid rgba(255, 255, 255, 0.1); /* Top Highlight */
-    
-    /* The "Height" of the button */
+    /* 3D Styling */
+    border: none; 
+    border-top: 1px solid rgba(255, 255, 255, 0.1); 
     box-shadow: 
-        0 4px 0 #000000,          /* The hard dark edge (Physical depth) */
-        0 5px 10px rgba(0,0,0,0.5); /* Soft shadow on the 'floor' */
+        0 3px 0 #000000,          
+        0 4px 8px rgba(0,0,0,0.4); 
         
     transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* Important: Push button up slightly so shadow doesn't overlap elements below */
-    margin-bottom: 4px; 
+    /* Prevent text wrapping/breaking */
+    white-space: nowrap; 
+    min-width: 0; 
+    white-space: nowrap; 
+    overflow: hidden;
+    text-overflow: clip;
 }
 
 .tool-btn:hover {
     background: var(--bg-active);
-    transform: translateY(-1px); /* Slight lift on hover */
+    transform: translateY(-1px);
     box-shadow: 
-        0 5px 0 #000000, 
-        0 6px 12px rgba(0,0,0,0.6);
+        0 4px 0 #000000, 
+        0 5px 10px rgba(0,0,0,0.5);
 }
 
 .tool-btn:active {
-    /* PRESS EFFECT */
-    transform: translateY(4px); /* Push down exactly the height of the shadow */
-    box-shadow: 
-        0 0 0 #000000, /* Shadow disappears (squished) */
-        0 0 0 rgba(0,0,0,0);
-        
-    border-top-color: transparent; /* Dim the highlight */
+    transform: translateY(3px);
+    box-shadow: 0 0 0 #000000;
+    border-top-color: transparent; 
 }
 /* --- COLOR PICKER MODAL --- */
 .color-modal {
@@ -739,39 +743,21 @@ body {
 
 .frame-group-capsule {
     flex: 1; 
+    gap: 3px;
+    height:37px;
     display: flex;
     align-items: center;
     justify-content: space-evenly;
     background: var(--bg-hover);
     border: 1px solid var(--border);
-    border-radius: 20px; 
+    border-radius: 8px; 
     padding: 0 10px;
 }
 
-.frame-group-capsule .mini-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    font-weight: bold;
-    font-size: 11px;
-    padding: 5px;
-    border-radius: 4px;
-    flex: 1; 
+.pre-comp-btn{
+    width: 80px;
+    height: 37px;
 }
-
-.frame-group-capsule .mini-btn:hover {
-    background: var(--text-main);
-    color: var(--bg-deep);
-}
-
-.single-action-btn {
-    width: 60px; 
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 /* --- SFX HORIZONTAL NAV BAR --- */
 .sfx-nav-bar {
     display: flex;
@@ -872,4 +858,147 @@ body {
 .sfx-cat-btn.active .cat-text {
     max-width: 200px; 
     opacity: 1;
+}
+
+/* --- EXISTING STYLES OMITTED FOR BREVITY (Paste layout-sfx-grid, etc. here) --- */
+
+/* ... (Keep your Root, Body, Top Bar, Bottom Bar, and Grid Styles) ... */
+
+
+/* --- MAIN TOOLS LAYOUT (Split View) --- */
+.tools-flex-wrapper {
+    display: flex;
+    gap: 12px; /* Gap between Tools and Anchor Pad */
+    align-items: flex-start;
+    height: 100%;
+}
+
+.tools-left-col {
+    flex: 1; /* Takes up remaining space */
+    min-width: 0; /* Allow shrinking */
+}
+
+.tools-right-col {
+    width: auto;
+    flex-shrink: 0; /* Don't shrink the anchor pad */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Update Compact Grid to fit Left Column (3 Columns instead of 5) */
+.compact-grid {
+    display: grid;
+    /* Change from 5 cols to 3 cols to fit narrower space */
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 6px;
+    width: 100%;
+}
+
+/* Adjust Mixed Control Row for narrower space */
+.mixed-control-row {
+    margin-top: 8px;
+    gap: 6px;
+}
+.frame-group-capsule {
+    padding: 0 5px; /* Tighter padding */
+}
+.single-action-btn {
+    width: 40px; /* Smaller ADD button */
+}
+
+
+/* --- ANCHOR POINT PAD (Purple 3D Theme) --- */
+.anchor-pad-label {
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--accent-sfx); /* Purple */
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(127, 0, 255, 0.4);
+}
+
+.anchor-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 30px); /* 3x3 Grid */
+    grid-template-rows: repeat(3, 30px);
+    gap: 4px;
+    
+    /* The Pad Container */
+    padding: 6px;
+    background: #111;
+    border-radius: 8px;
+    border: 1px solid rgba(127, 0, 255, 0.15); /* Purple Tint Border */
+    
+    /* 3D Sunken Look for the whole pad */
+    box-shadow: 
+        inset 0 2px 5px rgba(0,0,0,0.8),
+        0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Individual Anchor Buttons */
+.anchor-btn {
+    position: relative; /* For absolute positioning of the dot */
+    background: #1f1f1f;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.05);
+    
+    /* 3D Button Look */
+    box-shadow: 0 2px 0 #000;
+    transition: all 0.1s ease;
+}
+
+/* The "Dot" Indicator inside the button */
+.anchor-btn::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #555; /* Default Grey Dot */
+    border-radius: 1px;
+    transition: 0.2s;
+    
+    /* Default Center Alignment for safety */
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* --- DOT POSITIONS (The Visual Trick) --- */
+/* Top Row */
+.anchor-btn:nth-child(1)::after { top: 6px; left: 6px; } /* TL */
+.anchor-btn:nth-child(2)::after { top: 6px; left: 50%; } /* TC */
+.anchor-btn:nth-child(3)::after { top: 6px; right: 6px; left: auto; transform: translate(50%, -50%); } /* TR */
+
+/* Mid Row */
+.anchor-btn:nth-child(4)::after { top: 50%; left: 6px; } /* ML */
+.anchor-btn:nth-child(5)::after { width: 8px; height: 8px; border-radius: 2px; } /* Center (Bigger) */
+.anchor-btn:nth-child(6)::after { top: 50%; right: 6px; left: auto; transform: translate(50%, -50%); } /* MR */
+
+/* Bot Row */
+.anchor-btn:nth-child(7)::after { bottom: 6px; top: auto; left: 6px; transform: translate(-50%, 50%); } /* BL */
+.anchor-btn:nth-child(8)::after { bottom: 6px; top: auto; left: 50%; transform: translate(-50%, 50%); } /* BC */
+.anchor-btn:nth-child(9)::after { bottom: 6px; top: auto; right: 6px; left: auto; transform: translate(50%, 50%); } /* BR */
+
+
+/* --- INTERACTIONS --- */
+
+/* Hover: Purple Glow */
+.anchor-btn:hover {
+    background: #2a2a2a;
+    border-color: var(--accent-sfx);
+}
+.anchor-btn:hover::after {
+    background: #fff; /* White dot on hover */
+    box-shadow: 0 0 8px var(--accent-sfx); /* Purple Glow */
+}
+
+/* Active (Click): Press Down */
+.anchor-btn:active {
+    transform: translateY(2px); /* Push down */
+    box-shadow: 0 0 0 #000;     /* Remove shadow */
+    background: var(--accent-sfx); /* Turn Purple */
+}
+.anchor-btn:active::after {
+    background: #fff;
 }

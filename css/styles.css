@@ -1,3 +1,88 @@
+/* --- TOP BAR (LOGO AREA) --- */
+/* --- TOP BAR (LOGO AREA) --- */
+.top-bar {
+    /* REMOVED fixed height (was 50px) to allow big logo */
+    height: auto; 
+    min-height: 40px; /* Minimum safety height */
+    
+    background: rgb(0, 0, 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    }
+
+.app-logo {
+    /* Source is 400px wide. 
+       We restrict it to 85% of panel width (approx 255px) 
+       so it fits comfortably with margins.
+       The height will adjust automatically (~135px tall).
+    */
+    width: 100%; 
+    max-width: 280px; /* Hard limit just in case */
+    height: auto;     /* Maintains the 400x212 aspect ratio */
+    display: block;
+}
+
+/* Hide old text brand */
+.brand { display: none; }
+
+/* --- BOTTOM BAR (NAVIGATION) --- */
+.bottom-bar {
+    height: 50px;
+    background: var(--bg-panel);
+    display: flex; /* Flexbox for even spacing */
+    align-items: center;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 20;
+    padding: 0 4px; /* Slight padding on edges */
+    gap: 4px;
+}
+
+/* --- TAB BUTTONS (Updated for Bottom Bar) --- */
+.tab-btn {
+    flex: 1; /* THE KEY: Forces all tabs to share width evenly */
+    
+    padding: 10px 0; /* Vertical padding */
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 4px;
+    transition: 0.2s;
+    color: var(--text-muted);
+    user-select: none;
+    text-align: center; /* Center text */
+    
+    /* Center text vertically */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%; 
+}
+
+.tab-btn:hover {
+    background: var(--bg-active);
+    color: var(--text-main);
+}
+
+.tab-btn.active {
+    background: transparent; /* Clean look for bottom tabs */
+    color: var(--accent-sfx); /* Highlight text color */
+    border-bottom: 2px solid var(--accent-sfx); /* Line indicator */
+    border-radius: 0; /* Remove rounded corners for tab style */
+}
+
+/* Remove special styling for MAIN if you want them all uniform */
+.special-tab {
+    /* Optional: Keep it different? Or remove to make perfectly even. */
+    /* keeping it same as others for "even" requirement */
+}
+
+
+/* --- KEEP EXISTING STYLES BELOW THIS LINE --- */
+/* (Paste the rest of your CSS for Grid, SFX Nav Bar, etc. here) */
+
 :root {
     /* --- COLORS --- */
     --bg-deep: #000000;
@@ -8,11 +93,11 @@
     --bg-overlay: rgba(0, 0, 0, 0.8);
 
     /* --- ACCENTS --- */
-    --accent-sfx: #7f00ff; /* Cyan */
-    --accent-gfx: #7f00ff; /* Magenta */
-    --accent-vfx: #7f00ff; /* Lime */
-    --accent-pre: #7f00ff; /* Purple */
-    --accent-main: #7f00ff; /* White for Main tools */
+    --accent-sfx: #7f00ff; 
+    --accent-gfx: #7f00ff; 
+    --accent-vfx: #7f00ff; 
+    --accent-pre: #7f00ff; 
+    --accent-main: #7f00ff; 
 
     /* --- TEXT --- */
     --text-main: #ffffff;
@@ -101,63 +186,6 @@ body {
     display: none !important;
 }
 
-/* --- TOP BAR --- */
-.top-bar {
-    height: 50px;
-    background: var(--bg-panel);
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    z-index: 10;
-    overflow: hidden;
-}
-
-.brand {
-    font-weight: 800;
-    letter-spacing: 1px;
-    margin-right: auto; 
-    white-space: nowrap; 
-    flex-shrink: 0;
-}
-
-.brand span {
-    color: var(--accent-sfx);
-}
-
-.nav-tabs {
-    display: flex;
-    gap: 4px; 
-    justify-content: flex-end;
-    flex-wrap: nowrap; 
-    min-width: 0;
-}
-
-.tab-btn {
-    padding: 6px 12px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-    border-radius: 4px;
-    transition: 0.1s;
-    color: var(--text-muted);
-    user-select: none;
-    white-space: nowrap; 
-    text-align: center;
-}
-
-.tab-btn:hover {
-    background: var(--bg-active);
-    color: var(--text-main);
-}
-
-.tab-btn.active {
-    background: #7f00ff;
-    color: var(--bg-deep);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-}
-
 /* --- LAYOUT STRUCTURE --- */
 .content-area {
     display: flex;
@@ -208,56 +236,6 @@ body {
 
 .tool-btn:active {
     transform: scale(0.98);
-}
-
-/* --- ANCHOR POINT TOOLS --- */
-.anchor-section {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 10px; 
-    padding: 15px 0;
-    width: 100%;
-}
-
-.anchor-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 30px);
-    grid-template-rows: repeat(3, 30px);
-    gap: 6px; 
-}
-
-.anchor-btn {
-    background: var(--bg-hover);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    cursor: pointer;
-    position: relative;
-    transition: 0.2s all;
-}
-
-.anchor-btn:hover {
-    background: var(--accent-sfx);
-    border-color: var(--accent-sfx);
-    transform: scale(1.1);
-    z-index: 10;
-}
-
-.anchor-btn::after {
-    content: '';
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: #888;
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none; 
-}
-
-.anchor-btn:hover::after {
-    background: #000;
 }
 
 /* --- COLOR PICKER MODAL --- */
@@ -647,11 +625,10 @@ body {
 /* --- SFX HORIZONTAL NAV BAR --- */
 .sfx-nav-bar {
     display: flex;
-    /* THE FIX: Centering the group forces "even" expansion (Left moves Left, Right moves Right) */
     justify-content: center;
     gap: 6px; 
     
-    overflow-x: auto; /* Safety scroll if screen is too small */
+    overflow-x: auto; 
     padding: 6px 4px;
     margin-bottom: 6px;
     flex-shrink: 0;
@@ -690,7 +667,6 @@ body {
     /* Super Smooth Transition */
     transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     
-    /* Start with NO padding (Circle shape) */
     padding: 0; 
 }
 
@@ -723,7 +699,6 @@ body {
     border-color: var(--text-main);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     
-    /* Symmetrical Padding: Pushes icon left and text right evenly */
     padding: 0 14px; 
 }
 

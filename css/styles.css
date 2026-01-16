@@ -36,7 +36,7 @@
     left: 40px;         /* Side margins */
     right: 40px;
     
-    height: 35px;
+    height: 30px;
     
     /* GLASS STYLE */
     background: rgba(20, 20, 20, 0.2) !important; /* Slight tint for visibility */
@@ -46,11 +46,10 @@
     border: 1px solid rgba(255, 255, 255, 0.15); 
     border-radius: 50px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.3); /* Drop shadow for depth */
-    
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 3px; 
+    padding: 5px; 
     gap: 5px;
     z-index: 1000; /* Ensure it's above the grid */
 }
@@ -64,7 +63,7 @@
     align-items: center;
     justify-content: center;
     
-    border-radius: 17px; /* Matches parent curvature */
+    border-radius: 18px; /* Matches parent curvature */
     background: transparent;
     color: var(--text-muted);
     
@@ -86,13 +85,33 @@
 }
 
 /* Active (Selected) Effect */
+/* Active (Selected) Effect - 3D POP */
 .tab-btn.active {
-    background: var(--accent-sfx); 
+    background: var(--accent-sfx); /* Bright Purple */
     color: #ffffff;
     
-    /* Soft Glow */
-    box-shadow: 0 0 12px rgba(127, 0, 255, 0.5);
-    transform: scale(1.02);
+    /* 1. Top Highlight (Lighting) */
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    
+    /* 2. The 3D Depth (Darker Purple Ledge) */
+    box-shadow: 
+        0 3px 0 #4b0096,           /* Hard "Side" of the button */
+        0 5px 15px rgba(127, 0, 255, 0.4); /* Soft Glow underneath */
+        
+    /* 3. Lift it up to show volume */
+    transform: translateY(-3px); 
+    
+    font-weight: 800;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3); /* Etched text look */
+}
+
+/* Optional: Press Effect when clicking the active tab */
+.tab-btn.active:active {
+    transform: translateY(0px); /* Push down */
+    box-shadow: 
+        0 0 0 #4b0096,            /* Ledge disappears */
+        0 0 10px rgba(127, 0, 255, 0.4);
+    border-top-color: rgba(255, 255, 255, 0.2); /* Dim light */
 }
 /* Remove special styling for MAIN if you want them all uniform */
 .special-tab {
@@ -143,22 +162,54 @@ body {
 }
 
 /* Input Field */
+/* Input Field (3D Recessed Console Style) */
 .main-input {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
+    /* Base Appearance */
+    background: #1a1a1a; /* Very dark background */
     color: var(--text-main);
-    padding: 8px 10px;
-    border-radius: 4px;
+    padding: 10px 12px; /* Comfortable padding */
+    border-radius: 6px;
     width: 100%;
     box-sizing: border-box; 
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    
     font-family: 'Segoe UI', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     outline: none;
-}
-.main-input:focus {
-    border-color: var(--accent-sfx);
+
+    /* --- 3D SUNKEN EFFECT --- */
+    border: none;
+    /* 1. Deep inner shadow at top (Depression) */
+    /* 2. Light highlight at bottom edge (Lip) */
+    box-shadow: 
+        inset 0 3px 8px rgba(0, 0, 0, 0.9), 
+        inset 0 1px 2px rgba(0, 0, 0, 1),
+        0 1px 0 rgba(255, 255, 255, 0.1); 
+        
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Faint bottom rim */
+    
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
+/* Placeholder Text Color */
+.main-input::placeholder {
+    color: #444; /* Darker grey so it looks 'inside' the hole */
+    font-style: italic;
+}
+
+/* FOCUS STATE (When typing) */
+.main-input:focus {
+    background: #0a0a0a; /* Slightly lighter */
+    color: #fff;
+    
+    /* Purple inner glow */
+    box-shadow: 
+        inset 0 2px 5px rgba(0, 0, 0, 0.8),
+        0 0 0 1px var(--accent-sfx), /* Thin accent border */
+        0 0 15px rgba(127, 0, 255, 0.15); /* Soft outer glow */
+}
 /* Control Row for Frame Buttons */
 .control-row {
     display: flex;

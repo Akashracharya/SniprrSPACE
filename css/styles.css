@@ -27,52 +27,73 @@
 /* Hide old text brand */
 .brand { display: none; }
 
-/* --- BOTTOM BAR (NAVIGATION) --- */
+/* --- BOTTOM BAR (Transparent Glass Capsule) --- */
+/* --- BOTTOM BAR (Floating Overlay) --- */
 .bottom-bar {
-    height: 50px;
-    background: var(--bg-panel);
-    display: flex; /* Flexbox for even spacing */
+    /* FLOATING POSITION */
+    position: absolute; /* Sits ON TOP of content */
+    bottom: 10px;       /* Distance from bottom edge */
+    left: 40px;         /* Side margins */
+    right: 40px;
+    
+    height: 35px;
+    
+    /* GLASS STYLE */
+    background: rgba(20, 20, 20, 0.2) !important; /* Slight tint for visibility */
+    backdrop-filter: blur(10px); /* The Blur Magic */
+    -webkit-backdrop-filter: blur(10px);
+    
+    border: 1px solid rgba(255, 255, 255, 0.15); 
+    border-radius: 50px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3); /* Drop shadow for depth */
+    
+    display: flex;
     align-items: center;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-    z-index: 20;
-    padding: 0 4px; /* Slight padding on edges */
-    gap: 4px;
+    justify-content: space-between;
+    padding: 3px; 
+    gap: 5px;
+    z-index: 1000; /* Ensure it's above the grid */
 }
 
-/* --- TAB BUTTONS (Updated for Bottom Bar) --- */
+/* --- TAB BUTTONS (Glowing Pills) --- */
 .tab-btn {
-    flex: 1; /* THE KEY: Forces all tabs to share width evenly */
+    flex: 1; 
+    height: 100%;
     
-    padding: 10px 0; /* Vertical padding */
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: bold;
-    border-radius: 4px;
-    transition: 0.2s;
-    color: var(--text-muted);
-    user-select: none;
-    text-align: center; /* Center text */
-    
-    /* Center text vertically */
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%; 
+    
+    border-radius: 17px; /* Matches parent curvature */
+    background: transparent;
+    color: var(--text-muted);
+    
+    font-size: 10px; /* Slightly smaller text */
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+    text-transform: uppercase;
+    
+    transition: all 0.2s ease-out;
+    border: none; 
 }
 
+/* Hover Effect */
 .tab-btn:hover {
-    background: var(--bg-active);
+    background: rgba(255, 255, 255, 0.05); /* Very faint hover */
     color: var(--text-main);
 }
 
+/* Active (Selected) Effect */
 .tab-btn.active {
-    background: transparent; /* Clean look for bottom tabs */
-    color: var(--accent-sfx); /* Highlight text color */
-    border-bottom: 2px solid var(--accent-sfx); /* Line indicator */
-    border-radius: 0; /* Remove rounded corners for tab style */
+    background: var(--accent-sfx); 
+    color: #ffffff;
+    
+    /* Soft Glow */
+    box-shadow: 0 0 12px rgba(127, 0, 255, 0.5);
+    transform: scale(1.02);
 }
-
 /* Remove special styling for MAIN if you want them all uniform */
 .special-tab {
     /* Optional: Keep it different? Or remove to make perfectly even. */
@@ -207,6 +228,7 @@ body {
     display: flex;
     flex: 1;
     overflow: hidden;
+    position: relative; /* Essential for absolute positioning context */
 }
 
 /* --- MAIN TOOLS VIEW --- */
@@ -243,7 +265,7 @@ body {
     
     /* --- 3D MAGIC --- */
     border: none; /* Remove flat border */
-    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Top Highlight */
+    border-top: 2px solid rgba(255, 255, 255, 0.1); /* Top Highlight */
     
     /* The "Height" of the button */
     box-shadow: 
@@ -414,7 +436,8 @@ body {
     flex-direction: column;
     padding: 10px;
     overflow-y: hidden;
-    position: relative; 
+    position: relative;
+    height: 100%; /* Force full height */
 }
 
 .info-bar {
@@ -429,12 +452,16 @@ body {
 }
 
 /* --- GRID & LAYOUTS --- */
+/* --- GRID & LAYOUTS --- */
 .grid {
     display: grid;
     gap: 10px;
     overflow-y: auto;
     height: 100%;
-    padding-bottom: 20px;
+    
+    /* Add padding so the last items aren't hidden behind the floating bar */
+    padding-bottom: 60px !important; 
+    
     align-content: start;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 }
@@ -469,19 +496,49 @@ body {
 
 /* SFX 3x7 Compact Card Override */
 .grid.layout-sfx-grid .asset-card {
-    height: 50px; /* Short height for 7 rows/page */
+    height: 46px; /* Slightly shorter to account for the 4px shadow */
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 0 8px;
+    padding: 0 12px;
+    
+    /* --- 3D BASE STYLE --- */
+    background: var(--bg-hover);
+    border: none; /* Remove standard flat border */
+    border-top: 2px solid rgba(255, 255, 255, 0.08); /* Top highlight */
+    border-radius: 6px;
+    
+    /* The "Height" of the button */
+    box-shadow: 
+        0 4px 0 #000000,           /* Hard edge */
+        0 5px 10px rgba(0,0,0,0.3); /* Soft floor shadow */
+        
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Default Text Color */
+    color: var(--text-dim);
 }
 
 .grid.layout-sfx-grid .asset-card:hover {
-    background: var(--bg-hover);
-    border-color: var(--accent-sfx);
-    transform: none;
+    background: var(--text-main);   /* White background */
+    color: var(--bg-deep);          /* Black text */
+    
+    /* Lift slightly */
+    transform: translateY(-1px);
+    box-shadow: 
+        0 5px 0 #000000,
+        0 6px 12px rgba(0,0,0,0.4);
+        
+    /* Override standard border hover */
+    border-color: transparent; 
 }
-
+/* ACTIVE / CLICK STATE */
+.grid.layout-sfx-grid .asset-card:active {
+    /* Push down to hide the shadow */
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #000000;
+    border-top-color: transparent;
+}
 /* --- CARD CONTENT --- */
 .card-media {
     width: 100%;
@@ -692,7 +749,7 @@ body {
     
     height: 22px; 
     min-width: 22px; 
-    border-radius: 11px;
+    border-radius: 13px;
     
     background: var(--bg-hover);
     /* 3D Border Lighting */

@@ -1,8 +1,6 @@
 const csInterface = new CSInterface();
 const fs = require('fs');
 const path = require('path');
-let currentTabIndex = 3;
-let scrollDebounce = 0;
 
 // --- CONFIGURATION ---
 const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
@@ -10,62 +8,47 @@ const assetsRoot = path.join(extensionRoot, 'assets');
 
 const TAB_CONFIG = {
     'SFX': { types: ['.wav', '.mp3', '.aiff'], color: '#7f00ff', isPreset: false },
-    'GFX': { types: ['.mov', '.mp4', '.png'], color: '#7f00ff', isPreset: false },
+    'GFX': { types: ['.mov', '.mp4', '.png', '.jpg'], color: '#7f00ff', isPreset: false },
     'PRESETS': { types: ['.ffx'], color: '#7f00ff', isPreset: true },
     'MAIN': { color: '#7f00ff' }
 };
 
-let activeTab = 'SFX';
+let activeTab = 'MAIN'; // Will be overridden by init
 let activeCategory = '';
 let currentAudio = null;
+let currentTabIndex = 3; 
+let scrollDebounce = 0;
 
 // --- PAGINATION VARIABLES ---
-let allFiles = [];      // Full list of files for category
-let currentPage = 0;    // Current page index
+let allFiles = [];      
+let currentPage = 0;    
 let isLoading = false;  
 
 // --- DYNAMIC BATCH SIZE ---
 function getBatchSize() {
-    if (activeTab === 'SFX') return 21; // 3 columns * 7 rows
-    if (activeTab === 'GFX') return 6;  // 3 columns * 2 rows
-    return 9; // Default (Presets etc.)
+    if (activeTab === 'SFX') return 21; // 3x7
+    if (activeTab === 'GFX') return 6;  // 3x2
+    return 9; 
 }
 
 function init() {
     setupTabs();
     setupMainTools();
     
-    // 1. Sidebar Toggle Listener
-    const toggleBtn = document.getElementById('sidebarToggle');
-    if (toggleBtn) {
-        toggleBtn.onclick = () => {
-            const sidebar = document.getElementById('subFolderList');
-            sidebar.classList.toggle('visible');
-        };
-    }
-
-    // 2. Scroll Listener (Triggers Next Page)
+    // Scroll Listener for Grid (Next Page)
     const grid = document.getElementById('assetGrid');
     if (grid) {
-        grid.onscroll = null; 
         grid.addEventListener('wheel', (e) => {
             if (isLoading || activeTab === 'MAIN') return;
-
             if (e.deltaY > 0) {
-                // NEXT PAGE: If at bottom
-                if(grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 5) {
-                    nextPage();
-                }
+                if(grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 5) nextPage();
             } else {
-                // PREV PAGE: If at top
-                if(grid.scrollTop <= 0) {
-                    prevPage();
-                }
+                if(grid.scrollTop <= 0) prevPage();
             }
         });
     }
 
-    // Initial load
+    // Default to MAIN on load
     document.querySelector('.tab-btn[data-tab="MAIN"]').click(); 
 }
 
@@ -74,47 +57,34 @@ function setupTabs() {
     const navBar = document.getElementById('bottomNavBar');
     const glider = document.getElementById('tabGlider');
     
-    // 1. Click Logic & Glider Mover
-    tabs.forEach((tab, index) => {
+    // 1. Tab Click Logic
+    tabs.forEach((tab) => {
         tab.onclick = () => {
-            // Update State
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             currentTabIndex = parseInt(tab.getAttribute('data-index'));
             
-            // Move Glider (Slide Animation)
+            // Move Bottom Glider
             if (glider) {
                 glider.style.width = tab.offsetWidth + 'px';
                 glider.style.left = tab.offsetLeft + 'px';
             }
 
-            // Standard Tab Switching Logic
             switchTabContent(tab.getAttribute('data-tab'));
         };
     });
 
-    // 2. Scroll Wheel Logic (Smooth Switching)
+    // 2. Bottom Bar Scroll Switch
     if (navBar) {
         navBar.addEventListener('wheel', (e) => {
-            // Debounce: Wait 250ms between switches so it doesn't fly through tabs
             if (Date.now() - scrollDebounce < 250) return;
-            
-            if (e.deltaY > 0) {
-                // Scroll Down -> Next Tab
-                if (currentTabIndex < tabs.length - 1) {
-                    tabs[currentTabIndex + 1].click();
-                }
-            } else {
-                // Scroll Up -> Prev Tab
-                if (currentTabIndex > 0) {
-                    tabs[currentTabIndex - 1].click();
-                }
-            }
+            if (e.deltaY > 0 && currentTabIndex < tabs.length - 1) tabs[currentTabIndex + 1].click();
+            else if (e.deltaY < 0 && currentTabIndex > 0) tabs[currentTabIndex - 1].click();
             scrollDebounce = Date.now();
         });
     }
 
-    // Initialize Glider Position immediately
+    // Init Glider
     setTimeout(() => {
         const active = document.querySelector('.tab-btn.active');
         if (active && glider) {
@@ -124,92 +94,41 @@ function setupTabs() {
     }, 100);
 }
 
-// [Helper Function to handle the View Switching Logic]
-// (Separated this code out to make setupTabs cleaner)
 function switchTabContent(tabName) {
     activeTab = tabName;
     const browserView = document.getElementById('browserView');
     const toolsView = document.getElementById('toolsView');
-    const toggleBtn = document.getElementById('sidebarToggle');
-    const sfxNav = document.getElementById('sfxNavBar');
-    const subFolderList = document.getElementById('subFolderList');
+    const navBar = document.getElementById('categoryNavBar'); 
 
     if (activeTab === 'MAIN') {
-        if(toggleBtn) toggleBtn.classList.add('hidden');
-        subFolderList.classList.remove('visible'); 
-        sfxNav.classList.add('hidden');
-        
         browserView.classList.add('hidden');
         toolsView.classList.remove('hidden');
-    } else if (activeTab === 'SFX') {
-        if(toggleBtn) toggleBtn.classList.add('hidden');
-        subFolderList.classList.remove('visible');
-        sfxNav.classList.remove('hidden');
-        
-        toolsView.classList.add('hidden');
-        browserView.classList.remove('hidden');
-        loadSFXCategories(); 
     } else {
-        // GFX & PRESETS
-        if(toggleBtn) toggleBtn.classList.remove('hidden');
-        sfxNav.classList.add('hidden');
-        
+        // UNIFIED LOGIC: SFX, GFX, PRESETS all look the same now
         toolsView.classList.add('hidden');
         browserView.classList.remove('hidden');
-        loadSidebar(activeTab); 
+        
+        // Load the Horizontal Bubble Bar for this tab
+        loadCategories(tabName); 
     }
 }
 
-function setupMainTools() {
-    // 1. Pre-compose Logic
-    const btnPre = document.getElementById('btnPrecompose');
-    if(btnPre) {
-        btnPre.onclick = (e) => {
-            const isShift = e.shiftKey;
-            let name = document.getElementById('layerNameInput') ? document.getElementById('layerNameInput').value : "Pre-comp";
-            name = name.replace(/"/g, '\\"');
-            csInterface.evalScript(`doPrecompose(${isShift}, "${name}")`);
-        };
-    }
-
-    // 2. Solid Color Modal Logic
-    const btnSolid = document.getElementById('btnSolid');
-    const modal = document.getElementById('colorModal');
-    const closeModal = document.getElementById('closeModal');
-    const swatches = document.querySelectorAll('.color-swatch');
-
-    if(btnSolid) btnSolid.onclick = () => { modal.classList.remove('hidden'); };
-    if(closeModal) closeModal.onclick = () => { modal.classList.add('hidden'); };
-
-    swatches.forEach(swatch => {
-        swatch.onclick = () => {
-            const color = swatch.getAttribute('data-col');
-            csInterface.evalScript(`createLayer("solid", "${color}")`);
-            modal.classList.add('hidden');
-        };
-    });
-}
-
-// Global Wrappers
-window.runScript = function(funcName, arg1, arg2) {
-    let script = `${funcName}()`;
-    if (arg1 !== undefined && arg2 !== undefined) script = `${funcName}("${arg1}", "${arg2}")`;
-    else if (arg1 !== undefined) {
-        if (typeof arg1 === 'number') script = `${funcName}(${arg1})`;
-        else script = `${funcName}("${arg1}")`;
-    }
-    csInterface.evalScript(script);
-};
-
-// --- SFX HORIZONTAL NAV LOADER ---
-function loadSFXCategories() {
-    const navBar = document.getElementById('sfxNavBar');
-    const folderPath = path.join(assetsRoot, 'SFX');
+// --- UNIFIED CATEGORY LOADER (Bubble Style for All) ---
+function loadCategories(tabName) {
+    const navBar = document.getElementById('categoryNavBar'); // Reused ID
+    const folderPath = path.join(assetsRoot, tabName);
+    
     navBar.innerHTML = '';
+    
+    // Mouse Wheel Horizontal Scroll
+    navBar.onwheel = (e) => {
+        e.preventDefault();
+        navBar.scrollLeft += e.deltaY;
+    };
 
     fs.readdir(folderPath, (err, files) => {
         if (err) {
-            navBar.innerHTML = '<div style="padding:5px; opacity:0.5; font-size:10px;">No SFX found</div>';
+            navBar.innerHTML = '<div style="padding:10px; opacity:0.5; font-size:10px;">No folders</div>';
             return;
         }
         
@@ -217,9 +136,8 @@ function loadSFXCategories() {
         
         folders.forEach((cat, index) => {
             const btn = document.createElement('div');
-            btn.className = 'sfx-cat-btn';
+            btn.className = 'sfx-cat-btn'; // We reuse the CSS class because it has the animation
             
-            // Icon & Text Logic
             const firstLetter = cat.charAt(0).toUpperCase();
             const restOfWord = cat.slice(1);
             btn.innerHTML = `<span class="cat-icon">${firstLetter}</span><span class="cat-text">${restOfWord}</span>`;
@@ -227,40 +145,19 @@ function loadSFXCategories() {
             btn.onclick = () => {
                 document.querySelectorAll('.sfx-cat-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                activeCategory = cat;
-                loadGrid('SFX', cat);
-            };
-            
-            navBar.appendChild(btn);
-            if(index === 0) btn.click();
-        });
-    });
-}
-
-function loadSidebar(tabName) {
-    const sidebar = document.getElementById('subFolderList');
-    const folderPath = path.join(assetsRoot, tabName);
-    sidebar.innerHTML = '';
-
-    fs.readdir(folderPath, (err, files) => {
-        if (err) {
-            sidebar.innerHTML = '<div style="padding:10px; opacity:0.5">No folder found</div>';
-            return;
-        }
-        const folders = files.filter(file => fs.statSync(path.join(folderPath, file)).isDirectory());
-        folders.forEach((cat, index) => {
-            const btn = document.createElement('div');
-            btn.className = 'sub-folder-btn';
-            btn.innerText = cat;
-            btn.onclick = () => {
-                document.querySelectorAll('.sub-folder-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                btn.style.borderLeftColor = TAB_CONFIG[activeTab].color;
+                btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                
                 activeCategory = cat;
                 loadGrid(tabName, cat);
             };
-            sidebar.appendChild(btn);
-            if(index === 0) btn.click();
+            
+            navBar.appendChild(btn);
+            
+            // Auto-load first category
+            if(index === 0) {
+                // Wait slightly for UI to settle
+                setTimeout(() => btn.click(), 50); 
+            }
         });
     });
 }
@@ -272,13 +169,10 @@ function loadGrid(tabName, category) {
 
     // Layout Switching
     grid.className = 'grid'; 
-    if (tabName === 'SFX') {
-        grid.classList.add('layout-sfx-grid'); // 3x7
-    } else {
-        grid.classList.add('layout-gallery'); // 3 Cols (Will be 3x2 for GFX due to batch size)
-    }
+    if (tabName === 'SFX') grid.classList.add('layout-sfx-grid');
+    else grid.classList.add('layout-gallery');
 
-    // Header
+    // Header Update
     const display = document.getElementById('currentPathDisplay');
     display.innerText = `${tabName} > ${category}`;
     display.style.color = config.color;
@@ -289,33 +183,16 @@ function loadGrid(tabName, category) {
     
     fs.readdir(folderPath, (err, files) => {
         if (err) return;
-        
         allFiles = files.filter(file => config.types.includes(path.extname(file).toLowerCase()));
         renderPage(0); 
     });
-}
-
-function nextPage() {
-    const batchSize = getBatchSize();
-    const totalPages = Math.ceil(allFiles.length / batchSize);
-    if (currentPage < totalPages - 1) {
-        currentPage++;
-        renderPage(currentPage);
-    }
-}
-
-function prevPage() {
-    if (currentPage > 0) {
-        currentPage--;
-        renderPage(currentPage);
-    }
 }
 
 function renderPage(pageIndex) {
     const grid = document.getElementById('assetGrid');
     const folderPath = path.join(assetsRoot, activeTab, activeCategory);
     const config = TAB_CONFIG[activeTab];
-    const batchSize = getBatchSize(); // Returns 6 for GFX
+    const batchSize = getBatchSize();
     
     isLoading = true;
     grid.innerHTML = ''; 
@@ -335,7 +212,7 @@ function renderPage(pageIndex) {
             card.innerHTML = `<div class="preset-placeholder" style="color:${config.color}">🔊</div><div class="card-label">${file}</div>`;
             card.onmouseenter = () => playAudio(fullPath);
             card.onmouseleave = () => stopAudio();
-        } else if (activeTab === 'GFX' || activeTab === 'VFX') {
+        } else if (activeTab === 'GFX') {
             const isVideo = ['.mov', '.mp4'].includes(path.extname(file).toLowerCase());
             if(isVideo) {
                 card.innerHTML = `<video class="card-media" src="${fullPath}" loop muted></video><div class="card-label">${file}</div>`;
@@ -374,16 +251,29 @@ function renderPage(pageIndex) {
     isLoading = false;
 }
 
+function nextPage() {
+    const batchSize = getBatchSize();
+    const totalPages = Math.ceil(allFiles.length / batchSize);
+    if (currentPage < totalPages - 1) {
+        currentPage++;
+        renderPage(currentPage);
+    }
+}
+function prevPage() {
+    if (currentPage > 0) {
+        currentPage--;
+        renderPage(currentPage);
+    }
+}
+
 function updateFloatingPagination(pageIndex) {
     let container = document.getElementById('paginationFloat');
-    
     if (!container) {
         container = document.createElement('div');
         container.id = 'paginationFloat';
         container.className = 'pagination-float';
         document.querySelector('.grid-container').appendChild(container);
     }
-    
     container.innerHTML = ''; 
 
     const batchSize = getBatchSize();
@@ -393,19 +283,40 @@ function updateFloatingPagination(pageIndex) {
         const upBtn = document.createElement('div');
         upBtn.className = 'float-btn';
         upBtn.innerHTML = '▲'; 
-        upBtn.title = "Previous Page";
         upBtn.onclick = prevPage;
         container.appendChild(upBtn);
     }
-
     if (pageIndex < totalPages - 1) {
         const downBtn = document.createElement('div');
         downBtn.className = 'float-btn';
         downBtn.innerHTML = '▼';
-        downBtn.title = "Next Page";
         downBtn.onclick = nextPage;
         container.appendChild(downBtn);
     }
+}
+
+function setupMainTools() {
+    const btnPre = document.getElementById('btnPrecompose');
+    if(btnPre) {
+        btnPre.onclick = (e) => {
+            let name = document.getElementById('layerNameInput').value || "Pre-comp";
+            csInterface.evalScript(`doPrecompose(${e.shiftKey}, "${name}")`);
+        };
+    }
+    
+    // Solid Color Modal
+    const btnSolid = document.getElementById('btnSolid');
+    const modal = document.getElementById('colorModal');
+    const closeModal = document.getElementById('closeModal');
+    if(btnSolid) btnSolid.onclick = () => modal.classList.remove('hidden');
+    if(closeModal) closeModal.onclick = () => modal.classList.add('hidden');
+
+    document.querySelectorAll('.color-swatch').forEach(swatch => {
+        swatch.onclick = () => {
+            csInterface.evalScript(`createLayer("solid", "${swatch.getAttribute('data-col')}")`);
+            modal.classList.add('hidden');
+        };
+    });
 }
 
 function playAudio(path) {
@@ -422,9 +333,18 @@ function stopAudio() {
     }
 }
 
-function sendToAE(functionName, filePath) {
+function sendToAE(funcName, filePath) {
     const cleanPath = filePath.replace(/\\/g, "\\\\");
-    csInterface.evalScript(`${functionName}("${cleanPath}")`);
+    csInterface.evalScript(`${funcName}("${cleanPath}")`);
 }
 
+// Global Wrapper
+window.runScript = function(funcName, arg1, arg2) {
+    let script = `${funcName}()`;
+    if (arg1 !== undefined && arg2 !== undefined) script = `${funcName}("${arg1}", "${arg2}")`;
+    else if (arg1 !== undefined) script = typeof arg1 === 'number' ? `${funcName}(${arg1})` : `${funcName}("${arg1}")`;
+    csInterface.evalScript(script);
+};
+
+// Start
 init();

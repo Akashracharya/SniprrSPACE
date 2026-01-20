@@ -30,79 +30,86 @@
 /* --- BOTTOM BAR (Transparent Glass Capsule) --- */
 /* --- BOTTOM BAR (Floating Overlay) --- */
 .bottom-bar {
-    /* FLOATING POSITION */
-    position: absolute; /* Sits ON TOP of content */
-    bottom: 10px;       /* Distance from bottom edge */
-    left: 40px;         /* Side margins */
+    position: absolute;
+    bottom: 10px;
+    left: 40px;
     right: 40px;
+    height: 35px;
     
-    height: 30px;
-    
-    /* GLASS STYLE */
-    background: rgba(20, 20, 20, 0.2) !important; /* Slight tint for visibility */
-    backdrop-filter: blur(10px); /* The Blur Magic */
+    /* Transparent Glass Base */
+    background: rgba(20, 20, 20, 0.2) !important;
+    backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     
     border: 1px solid rgba(255, 255, 255, 0.15); 
     border-radius: 50px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3); /* Drop shadow for depth */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 5px; 
-    gap: 5px;
-    z-index: 1000; /* Ensure it's above the grid */
+    padding: 3px; 
+    gap: 0; /* Remove gap, we handle spacing via flex */
+    z-index: 1000;
 }
 
-/* --- TAB BUTTONS (Glowing Pills) --- */
+/* --- THE SLIDING GLIDER (New Animated Background) --- */
+.tab-glider {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px; /* Start position (updated by JS) */
+    width: 25%; /* Initial width (updated by JS) */
+    
+    border-radius: 20px;
+    z-index: 1; /* Sits behind text */
+    
+    /* --- 3D PURPLE STYLE (Moved from .tab-btn) --- */
+    background: var(--accent-sfx);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 
+        0 3px 0 #4b0096, 
+        0 5px 15px rgba(127, 0, 255, 0.4);
+        
+    /* Smooth Slide Animation */
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* --- TAB BUTTONS (Text Only) --- */
 .tab-btn {
     flex: 1; 
     height: 100%;
+    position: relative;
+    z-index: 2; /* Sits ON TOP of glider */
     
     display: flex;
     align-items: center;
     justify-content: center;
     
-    border-radius: 18px; /* Matches parent curvature */
-    background: transparent;
-    color: var(--text-muted);
+    background: transparent !important; /* No background */
+    border: none;
+    box-shadow: none !important; /* No shadow */
+    transform: none !important;  /* No lift (Glider lifts instead) */
     
-    font-size: 10px; /* Slightly smaller text */
-    font-weight: 800;
-    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    font-size: 10px;
+    font-weight: 700;
     cursor: pointer;
     user-select: none;
-    text-transform: uppercase;
-    
-    transition: all 0.2s ease-out;
-    border: none; 
+    transition: color 0.2s ease;
 }
 
-/* Hover Effect */
+/* Hover */
 .tab-btn:hover {
-    background: rgba(255, 255, 255, 0.05); /* Very faint hover */
-    color: var(--text-main);
+    color: #fff;
+    /* No background change on hover, just text */
 }
 
-/* Active (Selected) Effect */
-/* Active (Selected) Effect - 3D POP */
+/* Active Text */
 .tab-btn.active {
-    background: var(--accent-sfx); /* Bright Purple */
     color: #ffffff;
-    
-    /* 1. Top Highlight (Lighting) */
-    border-top: 1px solid rgba(255, 255, 255, 0.5);
-    
-    /* 2. The 3D Depth (Darker Purple Ledge) */
-    box-shadow: 
-        0 3px 0 #4b0096,           /* Hard "Side" of the button */
-        0 5px 15px rgba(127, 0, 255, 0.4); /* Soft Glow underneath */
-        
-    /* 3. Lift it up to show volume */
-    transform: translateY(-3px); 
-    
     font-weight: 800;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3); /* Etched text look */
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 /* Optional: Press Effect when clicking the active tab */

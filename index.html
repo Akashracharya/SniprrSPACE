@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>SniprrSPACE</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
     <div class="app-container">
-        
+
         <header class="top-bar">
             <img src="assets/main.png" class="app-logo" alt="SniprrSPACE">
         </header>
@@ -23,11 +25,11 @@
         </div>
 
         <div class="tools-view hidden" id="toolsView">
-            
+
             <input type="text" id="layerNameInput" class="main-input" placeholder="Comp Name...">
 
             <div class="tools-flex-wrapper">
-                
+
                 <div class="tools-left-col">
                     <div class="compact-grid">
                         <button class="tool-btn" onclick="runScript('createLayer', 'adjustment')">ADJ</button>
@@ -41,7 +43,7 @@
                         <button class="tool-btn" onclick="runScript('trimSelectedLayers', 'left')">TRM [</button>
                         <button class="tool-btn" onclick="runScript('trimSelectedLayers', 'right')">TRM ]</button>
                         <button class="tool-btn" onclick="runScript('moveLayerPoint', 'in')">inP</button>
-                        <button class="tool-btn" onclick="runScript('moveLayerPoint', 'out')">outP</button>         
+                        <button class="tool-btn" onclick="runScript('moveLayerPoint', 'out')">outP</button>
                     </div>
 
                     <div class="mixed-control-row">
@@ -65,14 +67,16 @@
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 2)"></div>
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 3)"></div>
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 4)"></div>
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 5)"></div> <div class="anchor-btn" onclick="runScript('setAnchorPoint', 6)"></div>
+                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 5)"></div>
+                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 6)"></div>
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 7)"></div>
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 8)"></div>
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 9)"></div>
                     </div>
                 </div>
 
-            </div> <div id="colorModal" class="color-modal hidden">
+            </div>
+            <div id="colorModal" class="color-modal hidden">
                 <div class="color-grid">
                     <div class="color-swatch" style="background:#FFFFFF" data-col="#FFFFFF"></div>
                     <div class="color-swatch" style="background:#000000" data-col="#000000"></div>
@@ -89,11 +93,13 @@
 
         </div>
 
-        <nav class="bottom-bar">
-            <div class="tab-btn active" data-tab="SFX">SFX</div>
-            <div class="tab-btn" data-tab="GFX">GFX</div>
-            <div class="tab-btn" data-tab="PRESETS">PRESETS</div>
-            <div class="tab-btn special-tab" data-tab="MAIN">MAIN</div>
+        <nav class="bottom-bar" id="bottomNavBar">
+            <div id="tabGlider" class="tab-glider"></div>
+
+            <div class="tab-btn" data-tab="SFX" data-index="0">SFX</div>
+            <div class="tab-btn" data-tab="GFX" data-index="1">GFX</div>
+            <div class="tab-btn" data-tab="PRESETS" data-index="2">PRESETS</div>
+            <div class="tab-btn special-tab" data-tab="MAIN" data-index="3">MAIN</div>
         </nav>
 
     </div>
@@ -101,4 +107,5 @@
     <script src="lib/CSInterface.js"></script>
     <script src="js/main.js"></script>
 </body>
+
 </html>

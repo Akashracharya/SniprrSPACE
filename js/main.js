@@ -1,6 +1,8 @@
 const csInterface = new CSInterface();
 const fs = require('fs');
 const path = require('path');
+let currentTabIndex = 3;
+let scrollDebounce = 0;
 
 // --- CONFIGURATION ---
 const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
@@ -69,44 +71,93 @@ function init() {
 
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
+    const navBar = document.getElementById('bottomNavBar');
+    const glider = document.getElementById('tabGlider');
+    
+    // 1. Click Logic & Glider Mover
+    tabs.forEach((tab, index) => {
+        tab.onclick = () => {
+            // Update State
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentTabIndex = parseInt(tab.getAttribute('data-index'));
+            
+            // Move Glider (Slide Animation)
+            if (glider) {
+                glider.style.width = tab.offsetWidth + 'px';
+                glider.style.left = tab.offsetLeft + 'px';
+            }
+
+            // Standard Tab Switching Logic
+            switchTabContent(tab.getAttribute('data-tab'));
+        };
+    });
+
+    // 2. Scroll Wheel Logic (Smooth Switching)
+    if (navBar) {
+        navBar.addEventListener('wheel', (e) => {
+            // Debounce: Wait 250ms between switches so it doesn't fly through tabs
+            if (Date.now() - scrollDebounce < 250) return;
+            
+            if (e.deltaY > 0) {
+                // Scroll Down -> Next Tab
+                if (currentTabIndex < tabs.length - 1) {
+                    tabs[currentTabIndex + 1].click();
+                }
+            } else {
+                // Scroll Up -> Prev Tab
+                if (currentTabIndex > 0) {
+                    tabs[currentTabIndex - 1].click();
+                }
+            }
+            scrollDebounce = Date.now();
+        });
+    }
+
+    // Initialize Glider Position immediately
+    setTimeout(() => {
+        const active = document.querySelector('.tab-btn.active');
+        if (active && glider) {
+            glider.style.width = active.offsetWidth + 'px';
+            glider.style.left = active.offsetLeft + 'px';
+        }
+    }, 100);
+}
+
+// [Helper Function to handle the View Switching Logic]
+// (Separated this code out to make setupTabs cleaner)
+function switchTabContent(tabName) {
+    activeTab = tabName;
     const browserView = document.getElementById('browserView');
     const toolsView = document.getElementById('toolsView');
     const toggleBtn = document.getElementById('sidebarToggle');
+    const sfxNav = document.getElementById('sfxNavBar');
+    const subFolderList = document.getElementById('subFolderList');
 
-    tabs.forEach(tab => {
-        tab.onclick = () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            activeTab = tab.getAttribute('data-tab');
-
-            // --- Toggle Views ---
-            if (activeTab === 'MAIN') {
-                if(toggleBtn) toggleBtn.classList.add('hidden');
-                document.getElementById('subFolderList').classList.remove('visible'); 
-                document.getElementById('sfxNavBar').classList.add('hidden'); // Hide SFX Nav
-                
-                browserView.classList.add('hidden');
-                toolsView.classList.remove('hidden');
-            } else if (activeTab === 'SFX') {
-                if(toggleBtn) toggleBtn.classList.add('hidden'); // SFX uses Top Nav
-                document.getElementById('subFolderList').classList.remove('visible');
-                document.getElementById('sfxNavBar').classList.remove('hidden'); // Show SFX Nav
-                
-                toolsView.classList.add('hidden');
-                browserView.classList.remove('hidden');
-                
-                loadSFXCategories(); // Load Horizontal Nav
-            } else {
-                // GFX & PRESETS
-                if(toggleBtn) toggleBtn.classList.remove('hidden');
-                document.getElementById('sfxNavBar').classList.add('hidden');
-                
-                toolsView.classList.add('hidden');
-                browserView.classList.remove('hidden');
-                loadSidebar(activeTab); 
-            }
-        };
-    });
+    if (activeTab === 'MAIN') {
+        if(toggleBtn) toggleBtn.classList.add('hidden');
+        subFolderList.classList.remove('visible'); 
+        sfxNav.classList.add('hidden');
+        
+        browserView.classList.add('hidden');
+        toolsView.classList.remove('hidden');
+    } else if (activeTab === 'SFX') {
+        if(toggleBtn) toggleBtn.classList.add('hidden');
+        subFolderList.classList.remove('visible');
+        sfxNav.classList.remove('hidden');
+        
+        toolsView.classList.add('hidden');
+        browserView.classList.remove('hidden');
+        loadSFXCategories(); 
+    } else {
+        // GFX & PRESETS
+        if(toggleBtn) toggleBtn.classList.remove('hidden');
+        sfxNav.classList.add('hidden');
+        
+        toolsView.classList.add('hidden');
+        browserView.classList.remove('hidden');
+        loadSidebar(activeTab); 
+    }
 }
 
 function setupMainTools() {

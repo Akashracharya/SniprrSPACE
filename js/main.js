@@ -64,7 +64,7 @@ function init() {
     }
 
     // Initial load
-    document.querySelector('.tab-btn[data-tab="SFX"]').click(); 
+    document.querySelector('.tab-btn[data-tab="MAIN"]').click(); 
 }
 
 function setupTabs() {

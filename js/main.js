@@ -1,6 +1,7 @@
 const csInterface = new CSInterface();
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
 
 // --- CONFIGURATION ---
 const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
@@ -34,7 +35,7 @@ function getBatchSize() {
 function init() {
     setupTabs();
     setupMainTools();
-    
+    setupFolderButton();
     // Scroll Listener for Grid (Next Page)
     const grid = document.getElementById('assetGrid');
     if (grid) {
@@ -323,6 +324,46 @@ function updateFloatingPagination(pageIndex) {
         container.appendChild(downBtn);
     }
 }
+// [ADD INSIDE init() or separate setup function]
+
+// [REPLACE the setupFolderButton function with this]
+// [REPLACE existing setupFolderButton]
+function setupFolderButton() {
+    const btn = document.getElementById('openFolderBtn');
+    
+    if (btn) {
+        btn.onclick = () => {
+            let targetPath = '';
+            
+            // Logic: Always open the ROOT of the current tab
+            if (activeTab === 'MAIN') {
+                targetPath = assetsRoot; 
+            } else {
+                // For SFX, GFX, PRESETS -> Open that main folder only
+                // We ignore 'activeCategory' here intentionally.
+                targetPath = path.join(assetsRoot, activeTab);
+            }
+
+            // Open using Node.js (Windows/Mac compatible)
+            let command = '';
+            if (process.platform === 'darwin') {
+                command = `open "${targetPath}"`;
+            } else {
+                // Windows robust command
+                command = `start "" "${targetPath}"`;
+            }
+
+            exec(command, (err) => {
+                if (err) {
+                    // Fallback
+                    const csInterface = new CSInterface();
+                    csInterface.openURL(targetPath); 
+                }
+            });
+        };
+    }
+}
+
 
 function setupMainTools() {
     const btnPre = document.getElementById('btnPrecompose');

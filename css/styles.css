@@ -1010,3 +1010,44 @@ body {
 .anchor-btn:active::after {
     background: #fff;
 }
+
+/* --- FLOATING FOLDER BUTTON --- */
+.floating-folder-btn {
+    position: absolute;
+    top: 45px;   /* Positioned at bottom right */
+    left: 10px;
+    z-index: 100;   /* Above the grid items */
+    
+    width: 35px;
+    height: 25px;
+    border-radius: 16%;
+    
+    /* Transparent Glass Style */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    
+    /* Centering the icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.5; /* Dim by default so it's not distracting */
+}
+
+/* Hover Effect */
+.floating-folder-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Click Effect */
+.floating-folder-btn:active {
+    transform: scale(0.95);
+    background: var(--accent-sfx); /* Briefly purple on click */
+}

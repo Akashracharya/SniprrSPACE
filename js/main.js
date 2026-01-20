@@ -23,7 +23,7 @@ let scrollDebounce = 0;
 let allFiles = [];      
 let currentPage = 0;    
 let isLoading = false;  
-
+let loadContentTimer = null;
 // --- DYNAMIC BATCH SIZE ---
 function getBatchSize() {
     if (activeTab === 'SFX') return 21; // 3x7
@@ -57,34 +57,63 @@ function setupTabs() {
     const navBar = document.getElementById('bottomNavBar');
     const glider = document.getElementById('tabGlider');
     
-    // 1. Tab Click Logic
-    tabs.forEach((tab) => {
-        tab.onclick = () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentTabIndex = parseInt(tab.getAttribute('data-index'));
-            
-            // Move Bottom Glider
-            if (glider) {
-                glider.style.width = tab.offsetWidth + 'px';
-                glider.style.left = tab.offsetLeft + 'px';
-            }
+    // Helper to switch tab visually instantly, but delay loading data
+    const activateTab = (index) => {
+        const tab = tabs[index];
+        if (!tab) return;
 
+        // 1. VISUAL UPDATE (Instant)
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentTabIndex = index;
+        
+        // Move Glider Animation
+        if (glider) {
+            glider.style.width = tab.offsetWidth + 'px';
+            glider.style.left = tab.offsetLeft + 'px';
+        }
+
+        // 2. DATA LOAD (Delayed/Debounced)
+        // Clear any pending load from the previous tab you just scrolled past
+        if (loadContentTimer) clearTimeout(loadContentTimer);
+
+        // Wait 400ms. If user doesn't switch again, THEN load the files.
+        loadContentTimer = setTimeout(() => {
             switchTabContent(tab.getAttribute('data-tab'));
+        }, 400); 
+    };
+
+    // 1. Click Logic
+    tabs.forEach((tab, index) => {
+        tab.onclick = () => {
+            // For clicks, we usually want instant response, 
+            // but keeping the timer prevents double-loading if they spam click.
+            activateTab(index);
         };
     });
 
-    // 2. Bottom Bar Scroll Switch
+    // 2. Scroll Wheel Logic
     if (navBar) {
         navBar.addEventListener('wheel', (e) => {
-            if (Date.now() - scrollDebounce < 250) return;
-            if (e.deltaY > 0 && currentTabIndex < tabs.length - 1) tabs[currentTabIndex + 1].click();
-            else if (e.deltaY < 0 && currentTabIndex > 0) tabs[currentTabIndex - 1].click();
+            // Limit scroll speed slightly (UI Debounce)
+            if (Date.now() - scrollDebounce < 150) return;
+            
+            if (e.deltaY > 0) {
+                // Scroll Down -> Next Tab
+                if (currentTabIndex < tabs.length - 1) {
+                    activateTab(currentTabIndex + 1);
+                }
+            } else {
+                // Scroll Up -> Prev Tab
+                if (currentTabIndex > 0) {
+                    activateTab(currentTabIndex - 1);
+                }
+            }
             scrollDebounce = Date.now();
         });
     }
 
-    // Init Glider
+    // Init Glider Position
     setTimeout(() => {
         const active = document.querySelector('.tab-btn.active');
         if (active && glider) {

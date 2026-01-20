@@ -114,10 +114,7 @@
     border-top-color: rgba(255, 255, 255, 0.2); /* Dim light */
 }
 /* Remove special styling for MAIN if you want them all uniform */
-.special-tab {
-    /* Optional: Keep it different? Or remove to make perfectly even. */
-    /* keeping it same as others for "even" requirement */
-}
+
 
 
 /* --- KEEP EXISTING STYLES BELOW THIS LINE --- */

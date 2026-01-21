@@ -32,8 +32,8 @@
 .bottom-bar {
     position: absolute;
     bottom: 10px;
-    left: 40px;
-    right: 40px;
+    left: 20px;
+    right: 20px;
     height: 35px;
     
     /* Transparent Glass Base */
@@ -720,30 +720,30 @@ body {
     right: 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
     z-index: 50; 
 }
 .pagination-bar {
     position: absolute;
-    bottom: 67px;
+    bottom: 60px;
     right: 20px;
     z-index: 100;
     
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
     
-    background: rgba(12, 12, 12, 0.95); /* Dark background behind buttons */
-    padding: 8px 12px;
+    background: rgba(12, 12, 12, 0.39); /* Dark background behind buttons */
+    padding: 6px 10px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     border: 1px solid rgba(255,255,255,0.1);
 }
 .page-info {
     color: #ccc;
-    font-size: 11px;
+    font-size: 9px;
     font-family: sans-serif;
-    margin-right: 5px;
+    margin-right: 4px;
 }
 
 /* The Buttons */
@@ -751,9 +751,9 @@ body {
     background: #242424;
     color: white;
     border: none;
-    padding: 5px 12px;
+    padding: 3px 10px;
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 9px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1105,13 +1105,13 @@ body {
 /* --- FLOATING FOLDER BUTTON --- */
 .floating-folder-btn {
     position: absolute;
-    top: 45px;   /* Positioned at bottom right */
-    left: 10px;
+    top: 40px;   /* Positioned at bottom right */
+    left: 15px;
     z-index: 100;   /* Above the grid items */
     
     width: 35px;
-    height: 25px;
-    border-radius: 16%;
+    height: 35px;
+    border-radius: 50%;
     
     /* Transparent Glass Style */
     background: rgba(255, 255, 255, 0.05);
@@ -1122,11 +1122,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    
     font-size: 15px;
     cursor: pointer;
     transition: all 0.2s ease;
-    opacity: 0.5; /* Dim by default so it's not distracting */
 }
 
 /* Hover Effect */

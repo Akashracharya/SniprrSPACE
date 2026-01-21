@@ -46,11 +46,11 @@ function applyPreset(presetPath) {
         
         // --- CHECKS ---
         if (!comp || !(comp instanceof CompItem)) {
-            alert("Error: No Composition Active.");
+            alert("No Composition Active.");
             return;
         }
         if (comp.selectedLayers.length === 0) {
-            alert("Error: No Layer Selected.");
+            alert("No Layer Selected.");
             return;
         }
 
@@ -127,19 +127,23 @@ function applyPreset(presetPath) {
             
             if (isNull) {
                 newLayer = comp.layers.addNull();
+                newLayer.label = 1;
             } 
             else if (isSolid) {
                 // White Solid
                 newLayer = comp.layers.addSolid([1,1,1], layerName, comp.width, comp.height, comp.pixelAspect);
+                newLayer.label = 5;
             } 
             else if (isBlack) {
                 // Black Solid
                 newLayer = comp.layers.addSolid([0,0,0], layerName, comp.width, comp.height, comp.pixelAspect);
+                newLayer.label = 15;
             } 
             else {
                 // Default: Adjustment Layer
                 newLayer = comp.layers.addSolid([1,1,1], layerName, comp.width, comp.height, comp.pixelAspect);
                 newLayer.adjustmentLayer = true;
+                newLayer.label = 8;
             }
 
             // D. Arrange & Apply

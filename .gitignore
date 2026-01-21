@@ -25,6 +25,9 @@ assets/**/*.m4a
 assets/**/*.mp4
 assets/**/*.mov
 assets/**/*.avi
+assets/**/*.m4v
+
+
 
 # Images
 assets/**/*.png

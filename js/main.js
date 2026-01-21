@@ -250,19 +250,69 @@ function renderPage(pageIndex) {
                 card.innerHTML = `<img class="card-media" src="${fullPath}"> <div class="card-label">${displayName}</div>`;
             }
         } else if (activeTab === 'PRESETS') {
-            const previewPath = fullPath.replace('.ffx', '.mp4');
-            let html = `<div class="preset-placeholder">NO PREVIEW</div>`;
-            if (fs.existsSync(previewPath)) {
-               html = `<div class="preset-placeholder">NO PREVIEW</div><video class="card-media" src="${previewPath}" loop muted></video><div class="card-label">${file}</div>`;
-            } else {
-                html += `<div class="card-label">${displayName}</div>`;
+            // --- 1. SMART PATH FINDING ---
+            const dir = path.dirname(fullPath);
+            const ext = path.extname(fullPath);
+            const baseName = path.basename(fullPath, ext);
+            
+            // Create "Clean Name" for display (Remove tags)
+            const cleanNameDisplay = baseName.replace(/\[.*?\]/g, "").trim();
+
+            function findAsset(extensions) {
+                for (let x = 0; x < extensions.length; x++) {
+                    const format = extensions[x];
+                    let testPath = path.join(dir, baseName + format);
+                    if (fs.existsSync(testPath)) return testPath;
+                    testPath = path.join(dir, cleanNameDisplay + format);
+                    if (fs.existsSync(testPath)) return testPath;
+                }
+                return null;
             }
-            card.innerHTML = html;
-            const vid = card.querySelector('video');
-            if (vid) {
-                vid.onloadedmetadata = () => { vid.currentTime = vid.duration / 2; };
-                card.onmouseenter = () => { vid.play(); };
-                card.onmouseleave = () => { vid.pause(); vid.currentTime = vid.duration / 2; };
+
+            // Path Sanitizer
+            const toUrl = (p) => {
+                if (!p) return '';
+                let forward = p.replace(/\\/g, '/');
+                let encoded = encodeURI(forward).replace(/#/g, '%23'); 
+                return `file:///${encoded}`;
+            };
+
+            const videoPathRaw = findAsset(['.mp4', '.mov']);
+            const videoSrc = toUrl(videoPathRaw);
+
+            // --- 2. GENERATE HTML (Text Card First) ---
+            
+            // A. Base Thumbnail: Big Text Name
+            let innerHTML = `
+                <div class="text-thumbnail">
+                    <div class="thumb-title">${cleanNameDisplay}</div>
+                    ${!videoPathRaw ? '<div class="no-preview-tag">NO PREVIEW</div>' : ''}
+                </div>
+            `;
+
+            // B. If Video Exists, Add Hidden Video Layer
+            if (videoPathRaw) {
+                innerHTML += `<video class="hover-video" src="${videoSrc}" loop muted playsinline></video>`;
+            }
+
+            card.innerHTML = innerHTML;
+
+            // --- 3. PLAYBACK LOGIC ---
+            if (videoPathRaw) {
+                const vid = card.querySelector('video');
+                
+                // Only load metadata, don't waste resources loading frames yet
+                vid.preload = "none"; 
+
+                card.onmouseenter = () => { 
+                    vid.currentTime = 0; 
+                    vid.play().catch(e => {}); 
+                };
+
+                card.onmouseleave = () => { 
+                    vid.pause(); 
+                    vid.currentTime = 0; 
+                };
             }
         }
         

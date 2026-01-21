@@ -36,18 +36,6 @@ function init() {
     setupTabs();
     setupMainTools();
     setupFolderButton();
-    // Scroll Listener for Grid (Next Page)
-    const grid = document.getElementById('assetGrid');
-    if (grid) {
-        grid.addEventListener('wheel', (e) => {
-            if (isLoading || activeTab === 'MAIN') return;
-            if (e.deltaY > 0) {
-                if(grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 5) nextPage();
-            } else {
-                if(grid.scrollTop <= 0) prevPage();
-            }
-        });
-    }
 
     // Default to MAIN on load
     document.querySelector('.tab-btn[data-tab="MAIN"]').click(); 

@@ -234,32 +234,37 @@ function renderPage(pageIndex) {
 
     batch.forEach(file => {
         const fullPath = path.join(folderPath, file);
+        const displayName = file
+            .replace(/\[.*?\]/g, "")   // Remove anything inside brackets []
+            .replace(/\.[^/.]+$/, "")  // Remove file extension (.ffx, .mp4, etc)
+            .replace(/\s+/g, " ")      // Collapse double spaces into one
+            .trim();
         const card = document.createElement('div');
         card.className = 'asset-card';
         if(config.isPreset) card.classList.add('preset-card');
         
         if (activeTab === 'SFX') {
-            card.innerHTML = `<div class="preset-placeholder" style="color:${config.color}">🔊</div><div class="card-label">${file}</div>`;
+            card.innerHTML = `<div class="preset-placeholder" style="color:${config.color}">🔊</div><div class="card-label">${displayName}</div>`;
             card.onmouseenter = () => playAudio(fullPath);
             card.onmouseleave = () => stopAudio();
         } else if (activeTab === 'GFX') {
             const isVideo = ['.mov', '.mp4'].includes(path.extname(file).toLowerCase());
             if(isVideo) {
-                card.innerHTML = `<video class="card-media" src="${fullPath}" loop muted></video><div class="card-label">${file}</div>`;
+                card.innerHTML = `<video class="card-media" src="${fullPath}" loop muted></video><div class="card-label">${displayName}</div>`;
                 const vid = card.querySelector('video');
                 vid.onloadedmetadata = () => { vid.currentTime = vid.duration / 2; };
                 card.onmouseenter = () => { vid.play(); };
                 card.onmouseleave = () => { vid.pause(); vid.currentTime = vid.duration / 2; };
             } else {
-                card.innerHTML = `<img class="card-media" src="${fullPath}"> <div class="card-label">${file}</div>`;
+                card.innerHTML = `<img class="card-media" src="${fullPath}"> <div class="card-label">${displayName}</div>`;
             }
         } else if (activeTab === 'PRESETS') {
             const previewPath = fullPath.replace('.ffx', '.mp4');
-            let html = `<div class="preset-placeholder">✨</div>`;
+            let html = `<div class="preset-placeholder">NO PREVIEW</div>`;
             if (fs.existsSync(previewPath)) {
-               html = `<div class="preset-placeholder">✨</div><video class="card-media" src="${previewPath}" loop muted></video><div class="card-label">${file}</div>`;
+               html = `<div class="preset-placeholder">NO PREVIEW</div><video class="card-media" src="${previewPath}" loop muted></video><div class="card-label">${file}</div>`;
             } else {
-                html += `<div class="card-label">${file}</div>`;
+                html += `<div class="card-label">${displayName}</div>`;
             }
             card.innerHTML = html;
             const vid = card.querySelector('video');

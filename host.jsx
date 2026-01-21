@@ -36,28 +36,131 @@ function importFile(filePath) {
     app.endUndoGroup();
 }
 
-
-// 2. APPLY PRESET
+// 7. STRICT APPLY PRESET (Fixed: No .trim() error)
+// 8. FINAL ROBUST APPLY PRESET (Decodes URI + Flexible Tagging)
 function applyPreset(presetPath) {
-    app.beginUndoGroup("SniprrSPACE Preset");
+    app.beginUndoGroup("Sniprr Apply Preset");
+    
     try {
         var comp = app.project.activeItem;
-        if (!comp || !(comp instanceof CompItem)) return;
+        
+        // --- CHECKS ---
+        if (!comp || !(comp instanceof CompItem)) {
+            alert("Error: No Composition Active.");
+            return;
+        }
+        if (comp.selectedLayers.length === 0) {
+            alert("Error: No Layer Selected.");
+            return;
+        }
+
         var presetFile = new File(presetPath);
-        if (!presetFile.exists) return;
-        var solid = comp.layers.addSolid([1, 1, 1], "Sniprr Effect", comp.width, comp.height, comp.pixelAspect, comp.duration);
-        solid.adjustmentLayer = true;
-        solid.startTime = comp.time;
-        solid.label = 5;
-        solid.applyPreset(presetFile);
-    } catch (err) { alert(err.toString()); }
+        if (!presetFile.exists) {
+            // Try decoding path if file not found initially
+            presetFile = new File(decodeURIComponent(presetPath));
+            if (!presetFile.exists) {
+                alert("File not found: " + presetPath);
+                return;
+            }
+        }
+
+        // --- 1. CLEAN & DECODE NAME (CRITICAL FIX) ---
+        // Decode handles %20, %5B, %5D so brackets are readable
+        var decodedName = decodeURIComponent(presetFile.name);
+        // Remove .ffx and whitespace
+        var cleanName = decodedName.replace(/\.ffx$/i, "").replace(/^\s+|\s+$/g, '');
+        var nameLower = cleanName.toLowerCase();
+
+        // --- 2. PARSE TAGS (REGEX) ---
+        // Using Regex allows for spaces inside brackets like [ sol ]
+        
+        // Type Detectors
+        var isNull  = /\[\s*null\s*\]/i.test(nameLower);
+        var isSolid = /\[\s*(sol|solid|white|flash)\s*\]/i.test(nameLower);
+        var isBlack = /\[\s*(black|shadow)\s*\]/i.test(nameLower);
+        
+        // Timing Detectors
+        var isCentered = /\[\s*(center|trans)\s*\]/i.test(nameLower);
+        
+        // Duration Detector (Finds [10f] or [ 2s ])
+        var customDuration = null;
+        var durationMatch = nameLower.match(/\[\s*(\d+)\s*(f|s)\s*\]/i);
+        
+        if (durationMatch) {
+            var val = parseInt(durationMatch[1], 10);
+            var unit = durationMatch[2];
+            if (unit === 's') {
+                customDuration = val; // Seconds
+            } else if (unit === 'f') {
+                customDuration = val * comp.frameDuration; // Frames -> Seconds
+            }
+        }
+
+        var selectedLayers = comp.selectedLayers;
+
+        // --- 3. EXECUTE ---
+        for (var i = 0; i < selectedLayers.length; i++) {
+            var targetLayer = selectedLayers[i];
+            
+            // A. Calculate Duration
+            var finalDuration = 0;
+            if (customDuration !== null) {
+                finalDuration = customDuration;
+            } else {
+                // Default: Full Clip
+                finalDuration = targetLayer.outPoint - targetLayer.inPoint;
+                if (isCentered) finalDuration = 1.0; 
+            }
+
+            // B. Calculate Start Time
+            var startTime = targetLayer.inPoint;
+            if (isCentered) {
+                startTime = targetLayer.inPoint - (finalDuration / 2);
+            }
+
+            // Move CTI (Required for keyframes)
+            comp.time = startTime; 
+
+            // C. Create Layer
+            var newLayer;
+            var layerName = cleanName; // We will enforce this name
+            
+            if (isNull) {
+                newLayer = comp.layers.addNull();
+            } 
+            else if (isSolid) {
+                // White Solid
+                newLayer = comp.layers.addSolid([1,1,1], layerName, comp.width, comp.height, comp.pixelAspect);
+            } 
+            else if (isBlack) {
+                // Black Solid
+                newLayer = comp.layers.addSolid([0,0,0], layerName, comp.width, comp.height, comp.pixelAspect);
+            } 
+            else {
+                // Default: Adjustment Layer
+                newLayer = comp.layers.addSolid([1,1,1], layerName, comp.width, comp.height, comp.pixelAspect);
+                newLayer.adjustmentLayer = true;
+            }
+
+            // D. Arrange & Apply
+            newLayer.moveBefore(targetLayer);
+            
+            // Apply Preset
+            // We catch errors here so the script continues even if preset is "empty"
+            try { newLayer.applyPreset(presetFile); } catch(e) {}
+
+            // E. FORCE PROPERTIES (The Override)
+            newLayer.name = layerName;
+            newLayer.inPoint = startTime;
+            newLayer.outPoint = startTime + finalDuration;
+        }
+        
+    } catch(err) {
+        alert("Error: " + err.toString());
+    }
+    
     app.endUndoGroup();
 }
-
-// 3. CREATE LAYER (Matches Selection Length & Place)
-// [host.jsx]
-
-// 3. CREATE LAYER (Fixed: Explicit Renaming)
 // 3. CREATE LAYER (Fixed: Naming applied to Source & Layer)
 function createLayer(type, colorHex, userLabel) {
     app.beginUndoGroup("Sniprr Create " + type);

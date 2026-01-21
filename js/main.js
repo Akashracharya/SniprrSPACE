@@ -235,7 +235,7 @@ function renderPage(pageIndex) {
     batch.forEach(file => {
         const fullPath = path.join(folderPath, file);
         const displayName = file
-            .replace(/\[.*?\]/g, "")   // Remove anything inside brackets []
+            .replace(/\[.*?\]/g, "")   
             .replace(/\.[^/.]+$/, "")  
             .replace(/\s+/g, " ")      
             .trim();

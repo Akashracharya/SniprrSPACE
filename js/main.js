@@ -277,17 +277,40 @@ function renderPage(pageIndex) {
 }
 
 function nextPage() {
+    // 1. SAFETY CHECK: If locked, stop immediately
+    if (isPageLock) return;
+
     const batchSize = getBatchSize();
     const totalPages = Math.ceil(allFiles.length / batchSize);
+    
     if (currentPage < totalPages - 1) {
+        // 2. LOCK THE BUTTON
+        isPageLock = true;
+        
         currentPage++;
         renderPage(currentPage);
+
+        // 3. UNLOCK AFTER 300ms (Prevents spam/crash)
+        setTimeout(() => {
+            isPageLock = false;
+        }, 300);
     }
 }
 function prevPage() {
+    // 1. SAFETY CHECK
+    if (isPageLock) return;
+
     if (currentPage > 0) {
+        // 2. LOCK
+        isPageLock = true;
+
         currentPage--;
         renderPage(currentPage);
+
+        // 3. UNLOCK
+        setTimeout(() => {
+            isPageLock = false;
+        }, 300);
     }
 }
 

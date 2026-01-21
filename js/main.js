@@ -236,8 +236,8 @@ function renderPage(pageIndex) {
         const fullPath = path.join(folderPath, file);
         const displayName = file
             .replace(/\[.*?\]/g, "")   // Remove anything inside brackets []
-            .replace(/\.[^/.]+$/, "")  // Remove file extension (.ffx, .mp4, etc)
-            .replace(/\s+/g, " ")      // Collapse double spaces into one
+            .replace(/\.[^/.]+$/, "")  
+            .replace(/\s+/g, " ")      
             .trim();
         const card = document.createElement('div');
         card.className = 'asset-card';

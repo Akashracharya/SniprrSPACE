@@ -723,6 +723,54 @@ body {
     gap: 8px;
     z-index: 50; 
 }
+.pagination-bar {
+    position: absolute;
+    bottom: 67px;
+    right: 20px;
+    z-index: 100;
+    
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    
+    background: rgba(12, 12, 12, 0.95); /* Dark background behind buttons */
+    padding: 8px 12px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.page-info {
+    color: #ccc;
+    font-size: 11px;
+    font-family: sans-serif;
+    margin-right: 5px;
+}
+
+/* The Buttons */
+.page-btn {
+    background: #242424;
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+    background: #7f00ff; /* Your theme color */
+    transform: translateY(-1px);
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+    background: #333;
+}
+#assetGrid {
+    padding-bottom: 60px; /* Add extra space at bottom for the buttons */
+}
 
 .float-btn {
     width: 30px;

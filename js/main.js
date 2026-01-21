@@ -14,6 +14,8 @@ const TAB_CONFIG = {
     'MAIN': { color: '#7f00ff' }
 };
 
+
+let isPageLock = false;
 let activeTab = 'MAIN'; // Will be overridden by init
 let activeCategory = '';
 let currentAudio = null;
@@ -290,32 +292,49 @@ function prevPage() {
 }
 
 function updateFloatingPagination(pageIndex) {
-    let container = document.getElementById('paginationFloat');
+    // 1. Find or Create the Pagination Bar
+    let container = document.getElementById('paginationBar');
     if (!container) {
         container = document.createElement('div');
-        container.id = 'paginationFloat';
-        container.className = 'pagination-float';
-        document.querySelector('.grid-container').appendChild(container);
+        container.id = 'paginationBar';
+        container.className = 'pagination-bar';
+        // Append it to the browser view so it sits on top/bottom of grid
+        document.getElementById('browserView').appendChild(container);
     }
-    container.innerHTML = ''; 
+    
+    container.innerHTML = ''; // Clear existing buttons
 
     const batchSize = getBatchSize();
     const totalPages = Math.ceil(allFiles.length / batchSize);
 
-    if (pageIndex > 0) {
-        const upBtn = document.createElement('div');
-        upBtn.className = 'float-btn';
-        upBtn.innerHTML = '▲'; 
-        upBtn.onclick = prevPage;
-        container.appendChild(upBtn);
+    // If we only have 1 page, hide the bar completely
+    if (totalPages <= 1) {
+        container.style.display = 'none';
+        return;
     }
-    if (pageIndex < totalPages - 1) {
-        const downBtn = document.createElement('div');
-        downBtn.className = 'float-btn';
-        downBtn.innerHTML = '▼';
-        downBtn.onclick = nextPage;
-        container.appendChild(downBtn);
-    }
+    container.style.display = 'flex';
+
+    // 2. Add "Page X of Y" Text (Optional, good for UX)
+    const info = document.createElement('span');
+    info.className = 'page-info';
+    info.innerText = `Page ${pageIndex + 1} / ${totalPages}`;
+    container.appendChild(info);
+
+    // 3. Create PREV Button
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerText = 'Prev';
+    prevBtn.disabled = (pageIndex === 0); // Disable if on first page
+    prevBtn.onclick = prevPage;
+    container.appendChild(prevBtn);
+
+    // 4. Create NEXT Button
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerText = 'Next';
+    nextBtn.disabled = (pageIndex >= totalPages - 1); // Disable if on last page
+    nextBtn.onclick = nextPage;
+    container.appendChild(nextBtn);
 }
 // [ADD INSIDE init() or separate setup function]
 

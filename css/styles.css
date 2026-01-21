@@ -514,15 +514,10 @@ body {
 /* --- GRID & LAYOUTS --- */
 .grid {
     display: grid;
-    gap: 10px;
-    overflow-y: auto;
-    height: 100%;
-    
-    /* Add padding so the last items aren't hidden behind the floating bar */
-    padding-bottom: 60px !important; 
-    
-    align-content: start;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    /* Auto-fit columns: Minimum 100px wide, allow expanding */
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px; /* Space between cards */
+    padding: 10px;
 }
 
 .grid.layout-gallery {
@@ -538,19 +533,31 @@ body {
 
 /* --- ASSET CARDS --- */
 .asset-card {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-std);
-    height: 130px;
     position: relative;
-    overflow: hidden;
+    background: #2a2a2a;       /* Darker card background */
+    border-radius: 8px;        /* Smooth rounded corners */
+    overflow: hidden;          /* Clips image within rounded corners */
     cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
-    user-select: none;
+    
+    /* 3D DEPTH - INITIAL STATE */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Soft shadow underneath */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Subtle highlight border */
+    
+    /* SMOOTH ANIMATION */
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .asset-card:hover {
-    border-color: #7f00ff;
+    /* Lift up and scale slightly */
+    transform: translateY(-6px) scale(1.02); 
+    
+    /* Intense shadow to simulate height */
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5); 
+    
+    /* Brighten border */
+    border-color: rgba(255, 255, 255, 0.3); 
+    
+    z-index: 10; /* Ensure it floats above neighbors */
 }
 
 /* SFX 3x7 Compact Card Override */
@@ -601,30 +608,47 @@ body {
 /* --- CARD CONTENT --- */
 .card-media {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0.6;
-    transition: opacity 0.3s;
+    height: 90px;  /* Fixed height for uniformity */
+    object-fit: cover; /* Crop image nicely to fill box */
+    display: block;
+    opacity: 0.9;
+    
+    /* Smooth zoom on hover */
+    transition: transform 0.4s ease, opacity 0.3s ease;
 }
 
 .asset-card:hover .card-media {
+    transform: scale(1.1); 
     opacity: 1;
 }
 
 .card-label {
     position: absolute;
     bottom: 0;
+    left: 0;
     width: 100%;
-    background: var(--bg-overlay);
-    font-size: 10px;
-    padding: 4px;
+    padding: 8px 4px;
+    
+    /* Glassy/Gradient Background behind text */
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, rgba(0,0,0,0.6) 50%, transparent 100%);
+    
+    color: #fff;
+    font-size: 11px;
+    font-family: 'Segoe UI', sans-serif;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
-    pointer-events: none;
+    text-overflow: ellipsis; /* Adds "..." if text is too long */
+    pointer-events: none;    /* Lets clicks pass through to the card */
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
-
+.preset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 90px; /* Match media height */
+}
 /* SFX Label Override */
 .grid.layout-sfx-grid .card-label {
     position: static;
@@ -650,7 +674,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 24px;
+    font-size: 18px;
     color: #444;
 }
 

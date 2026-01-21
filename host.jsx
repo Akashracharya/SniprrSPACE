@@ -40,23 +40,19 @@ function importFile(filePath) {
 // 8. FINAL ROBUST APPLY PRESET (Decodes URI + Flexible Tagging)
 function applyPreset(presetPath) {
     app.beginUndoGroup("Sniprr Apply Preset");
-    
+
     try {
         var comp = app.project.activeItem;
-        
+
         // --- CHECKS ---
         if (!comp || !(comp instanceof CompItem)) {
-            alert("No Composition Active.");
-            return;
-        }
-        if (comp.selectedLayers.length === 0) {
-            alert("No Layer Selected.");
+            alert("SniprrError: No Composition Active.");
             return;
         }
 
+        // We need to read the tags BEFORE deciding if we need a selected layer
         var presetFile = new File(presetPath);
         if (!presetFile.exists) {
-            // Try decoding path if file not found initially
             presetFile = new File(decodeURIComponent(presetPath));
             if (!presetFile.exists) {
                 alert("File not found: " + presetPath);
@@ -64,105 +60,127 @@ function applyPreset(presetPath) {
             }
         }
 
-        // --- 1. CLEAN & DECODE NAME (CRITICAL FIX) ---
-        // Decode handles %20, %5B, %5D so brackets are readable
+        // --- 1. CLEAN & DECODE NAME ---
         var decodedName = decodeURIComponent(presetFile.name);
-        // Remove .ffx and whitespace
-        var cleanName = decodedName.replace(/\.ffx$/i, "").replace(/^\s+|\s+$/g, '');
-        var nameLower = cleanName.toLowerCase();
+        var nameLower = decodedName.toLowerCase();
+        var layerName = decodedName
+            .replace(/\.ffx$/i, "")         // Remove extension
+            .replace(/\[.*?\]/g, "")        // Remove [adj], [10f], etc.
+            .replace(/\s+/g, " ")           // Collapse double spaces
+            .replace(/^\s+|\s+$/g, '');     // Trim start/end spaces
 
-        // --- 2. PARSE TAGS (REGEX) ---
-        // Using Regex allows for spaces inside brackets like [ sol ]
-        
-        // Type Detectors
+        // --- 2. PARSE TAGS ---
+        var isFull  = /\[\s*full\s*\]/i.test(nameLower); // [full]
         var isNull  = /\[\s*null\s*\]/i.test(nameLower);
         var isSolid = /\[\s*(s|sol|solid|white|flash)\s*\]/i.test(nameLower);
         var isBlack = /\[\s*(black|shadow)\s*\]/i.test(nameLower);
-        
-        // Timing Detectors
         var isCentered = /\[\s*(c|center|trans)\s*\]/i.test(nameLower);
-        
-        // Duration Detector (Finds [10f] or [ 2s ])
+
         var customDuration = null;
         var durationMatch = nameLower.match(/\[\s*(\d+)\s*(f|s)\s*\]/i);
-        
+
         if (durationMatch) {
             var val = parseInt(durationMatch[1], 10);
             var unit = durationMatch[2];
-            if (unit === 's') {
-                customDuration = val; // Seconds
-            } else if (unit === 'f') {
-                customDuration = val * comp.frameDuration; // Frames -> Seconds
+            if (unit === 's') customDuration = val;
+            else if (unit === 'f') customDuration = val * comp.frameDuration;
+        }
+
+        // [EDITED: New Logic for Selection vs Global]
+        var targets = comp.selectedLayers;
+        var runGlobal = false;
+
+        // If nothing is selected...
+        if (targets.length === 0) {
+            if (isFull) {
+                // ...but it is [full], enable Global Mode
+                runGlobal = true; 
+            } else {
+                alert("SniprrError: No Layer Selected.\nPlease select a layer");
+                return; 
             }
         }
 
-        var selectedLayers = comp.selectedLayers;
+        // Define how many times to loop
+        var loopCount = runGlobal ? 1 : targets.length;
 
         // --- 3. EXECUTE ---
-        for (var i = 0; i < selectedLayers.length; i++) {
-            var targetLayer = selectedLayers[i];
+        for (var i = 0; i < loopCount; i++) {
             
-            // A. Calculate Duration
+            // [EDITED: Handle null target if global]
+            var targetLayer = runGlobal ? null : targets[i];
+
+            // A. Calculate Duration & Start Time
             var finalDuration = 0;
-            if (customDuration !== null) {
-                finalDuration = customDuration;
-            } else {
-                // Default: Full Clip
-                finalDuration = targetLayer.outPoint - targetLayer.inPoint;
-                if (isCentered) finalDuration = 1.0; 
+            var startTime = 0;
+
+            if (isFull) {
+                // [full] -> Cover entire composition 0 to End
+                startTime = 0;
+                finalDuration = comp.duration;
+            } 
+            else {
+                // Standard Logic (Requires targetLayer)
+                if (customDuration !== null) {
+                    finalDuration = customDuration;
+                } else {
+                    // Default: Full Clip
+                    finalDuration = targetLayer.outPoint - targetLayer.inPoint;
+                    if (isCentered) finalDuration = 1.0;
+                }
+
+                // Calculate Start Time based on target
+                if (isCentered) {
+                    startTime = targetLayer.inPoint - (finalDuration / 2);
+                } else {
+                    startTime = targetLayer.inPoint;
+                }
             }
 
-            // B. Calculate Start Time
-            var startTime = targetLayer.inPoint;
-            if (isCentered) {
-                startTime = targetLayer.inPoint - (finalDuration / 2);
-            }
+            // Move CTI
+            comp.time = startTime;
 
-            // Move CTI (Required for keyframes)
-            comp.time = startTime; 
-
-            // C. Create Layer
+            // B. Create Layer
             var newLayer;
-            var layerName = cleanName; // We will enforce this name
-            
             if (isNull) {
                 newLayer = comp.layers.addNull();
                 newLayer.label = 1;
-            } 
+            }
             else if (isSolid) {
-                // White Solid
-                newLayer = comp.layers.addSolid([1,1,1], layerName, comp.width, comp.height, comp.pixelAspect);
+                newLayer = comp.layers.addSolid([1, 1, 1], layerName, comp.width, comp.height, comp.pixelAspect);
                 newLayer.label = 5;
-            } 
+            }
             else if (isBlack) {
-                // Black Solid
-                newLayer = comp.layers.addSolid([0,0,0], layerName, comp.width, comp.height, comp.pixelAspect);
+                newLayer = comp.layers.addSolid([0, 0, 0], layerName, comp.width, comp.height, comp.pixelAspect);
                 newLayer.label = 15;
-            } 
+            }
             else {
-                // Default: Adjustment Layer
-                newLayer = comp.layers.addSolid([1,1,1], layerName, comp.width, comp.height, comp.pixelAspect);
+                newLayer = comp.layers.addSolid([1, 1, 1], layerName, comp.width, comp.height, comp.pixelAspect);
                 newLayer.adjustmentLayer = true;
                 newLayer.label = 8;
             }
 
-            // D. Arrange & Apply
-            newLayer.moveBefore(targetLayer);
-            
-            // Apply Preset
-            // We catch errors here so the script continues even if preset is "empty"
-            try { newLayer.applyPreset(presetFile); } catch(e) {}
+            // [EDITED: Placement Logic]
+            // If we have a target, go above it. If Global, go to top of stack.
+            if (targetLayer) {
+                newLayer.moveBefore(targetLayer);
+            } else {
+                newLayer.moveToBeginning();
+            }
 
-            // E. FORCE PROPERTIES (The Override)
+            // Apply Preset
+            try { newLayer.applyPreset(presetFile); } catch (e) { }
+
+            // C. FORCE PROPERTIES
             newLayer.name = layerName;
             newLayer.inPoint = startTime;
             newLayer.outPoint = startTime + finalDuration;
         }
-        
-    } catch(err) {
+
+    } catch (err) {
         alert("Error: " + err.toString());
     }
-    
+
     app.endUndoGroup();
 }
 // 3. CREATE LAYER (Fixed: Naming applied to Source & Layer)
@@ -225,20 +243,20 @@ function createLayer(type, colorHex, userLabel) {
                 // FIX: Open Native "New Camera" Dialog to show options
                 var countBefore = comp.numLayers;
                 app.executeCommand(app.findMenuCommandId("Camera..."));
-                
+
                 // If user clicked "OK" (layer count increased), grab the new camera
                 if (comp.numLayers > countBefore) {
                     newLayer = comp.selectedLayers[0];
-                    
+
                     // If the user typed a specific name in the panel, use it.
                     // If the panel input was empty (using default "Camera"), 
                     // we keep the name they chose in the dialog.
                     if (userLabel && userLabel !== "") {
                         newLayer.name = finalName;
                     }
-                    
+
                     // Prevent the code below from overwriting the name again if we just handled it
-                    finalName = newLayer.name; 
+                    finalName = newLayer.name;
                 }
                 break;
 
@@ -422,12 +440,12 @@ function setAnchorPoint(posIndex) {
     for (var n = 0; n < sel.length; n++) {
         var layer = sel[n];
         var rect = layer.sourceRectAtTime(comp.time, false);
-        
+
         // 1. Calculate Target X
         var newX = rect.left;
         if (posIndex === 2 || posIndex === 5 || posIndex === 8) newX += rect.width / 2; // Center Cols
         if (posIndex === 3 || posIndex === 6 || posIndex === 9) newX += rect.width;     // Right Cols
-        
+
         // 2. Calculate Target Y
         var newY = rect.top;
         if (posIndex === 4 || posIndex === 5 || posIndex === 6) newY += rect.height / 2; // Middle Rows
@@ -438,35 +456,35 @@ function setAnchorPoint(posIndex) {
         // 3. Compensation Math (Keep Layer in Visual Place)
         var curAnchor = layer.transform.anchorPoint.value;
         var delta = [newAnchor[0] - curAnchor[0], newAnchor[1] - curAnchor[1]];
-        
+
         var curScale = layer.transform.scale.value;
-        var curRot = layer.transform.rotation.value; 
-        
+        var curRot = layer.transform.rotation.value;
+
         // Convert Scale % to decimal factor
         var sX = curScale[0] / 100;
         var sY = curScale[1] / 100;
-        
+
         // Apply Rotation
         var rad = curRot * (Math.PI / 180);
         var cos = Math.cos(rad);
         var sin = Math.sin(rad);
-        
+
         // Rotate the delta offset
         var dX = delta[0] * sX;
         var dY = delta[1] * sY;
-        
+
         var rotDX = (dX * cos) - (dY * sin);
         var rotDY = (dX * sin) + (dY * cos);
-        
+
         var curPos = layer.transform.position.value;
-        
+
         // Apply values
         if (layer.threeDLayer) {
-             layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1], curAnchor[2]]);
-             layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY, curPos[2]]);
+            layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1], curAnchor[2]]);
+            layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY, curPos[2]]);
         } else {
-             layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1]]);
-             layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY]);
+            layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1]]);
+            layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY]);
         }
     }
     app.endUndoGroup();
@@ -480,16 +498,16 @@ function moveLayerPoint(type) {
     if (comp && comp.selectedLayers.length > 0) {
         var sel = comp.selectedLayers;
         var t = comp.time;
-        
+
         for (var i = 0; i < sel.length; i++) {
             var layer = sel[i];
-            
+
             if (type === 'in') {
                 // Calculate difference between current InPoint and CTI
                 var offset = t - layer.inPoint;
                 // Move the layer by that amount
                 layer.startTime += offset;
-            } 
+            }
             else if (type === 'out') {
                 // Calculate difference between current OutPoint and CTI
                 var offset = t - layer.outPoint;
@@ -529,10 +547,10 @@ function trimSelectedLayers(side) {
     if (comp && comp.selectedLayers.length > 0) {
         var sel = comp.selectedLayers;
         var t = comp.time;
-        
+
         for (var i = 0; i < sel.length; i++) {
             var layer = sel[i];
-            
+
             try {
                 // TRIM LEFT ( [ ) -> Sets In Point
                 // Goal: Layer starts at CTI.
@@ -541,7 +559,7 @@ function trimSelectedLayers(side) {
                     if (t < layer.outPoint) {
                         layer.inPoint = t;
                     }
-                } 
+                }
                 // TRIM RIGHT ( ] ) -> Sets Out Point
                 // Goal: Layer ends at CTI.
                 // Condition: CTI must be AFTER the current In Point.
@@ -550,7 +568,7 @@ function trimSelectedLayers(side) {
                         layer.outPoint = t;
                     }
                 }
-            } catch(e) {
+            } catch (e) {
                 // Ignore errors (prevents crash if layer is locked/invalid)
             }
         }

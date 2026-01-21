@@ -31,7 +31,7 @@ let loadContentTimer = null;
 function getBatchSize() {
     if (activeTab === 'SFX') return 60; // 3x7
     if (activeTab === 'GFX') return 6;
-    if (activeTab === 'PRESETS') return 6;  // 3x2
+    if (activeTab === 'PRESETS') return 4;  // 3x2
     return 9; 
 }
 
@@ -189,10 +189,18 @@ function loadGrid(tabName, category) {
     const config = TAB_CONFIG[tabName];
 
     // Layout Switching
-    grid.className = 'grid'; 
-    if (tabName === 'SFX') grid.classList.add('layout-sfx-grid');
-    else grid.classList.add('layout-gallery');
+    grid.className = 'grid'; // Reset to default
 
+    if (tabName === 'SFX') {
+        grid.classList.add('layout-sfx-grid');
+    } 
+    else if (tabName === 'PRESETS') {
+        // APPLY THE NEW 2x2 CLASS
+        grid.classList.add('layout-presets-2x2');
+    } 
+    else {
+        grid.classList.add('layout-gallery');
+    }
     // Header Update
     const display = document.getElementById('currentPathDisplay');
     display.innerText = `${tabName} > ${category}`;

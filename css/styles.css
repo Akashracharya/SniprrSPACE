@@ -1197,7 +1197,7 @@ body {
 /* The "NO PREVIEW" Subtitle */
 .no-preview-tag {
     margin-top: 8px;
-    font-size: 8px;
+    font-size: 10px;
     color: #888;
     background: rgba(0,0,0,0.3);
     padding: 2px 6px;
@@ -1229,4 +1229,38 @@ body {
 /* When hovering, dim the text behind it */
 .asset-card:hover .text-thumbnail {
     opacity: 0.2; 
+}
+
+
+/* --- PRESETS ONLY: 2x2 BIG GRID --- */
+.layout-presets-2x2 {
+    display: grid;
+    /* Force exactly 2 columns */
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 10px;
+    padding: 15px;
+}
+
+/* Make the cards inside the 2x2 grid TALLER */
+.layout-presets-2x2 .asset-card {
+    height: 115px; /* Much bigger than the standard 110px */
+}
+
+/* Make the Text Thumbnail fill the new height */
+.layout-presets-2x2 .text-thumbnail, 
+.layout-presets-2x2 .hover-video,
+.layout-presets-2x2 .card-media {
+    height: 100%; /* Fill the 180px height */
+}
+
+/* Adjust font size for the big cards */
+.layout-presets-2x2 .thumb-title {
+    font-size: 20px; /* Bigger text */
+}
+
+/* Adjust the NO PREVIEW tag position */
+.layout-presets-2x2 .no-preview-tag {
+    font-size: 10px;
+    padding: 4px 8px;
+    margin-top: 10px;
 }

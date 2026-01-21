@@ -76,11 +76,11 @@ function applyPreset(presetPath) {
         
         // Type Detectors
         var isNull  = /\[\s*null\s*\]/i.test(nameLower);
-        var isSolid = /\[\s*(sol|solid|white|flash)\s*\]/i.test(nameLower);
+        var isSolid = /\[\s*(s|sol|solid|white|flash)\s*\]/i.test(nameLower);
         var isBlack = /\[\s*(black|shadow)\s*\]/i.test(nameLower);
         
         // Timing Detectors
-        var isCentered = /\[\s*(center|trans)\s*\]/i.test(nameLower);
+        var isCentered = /\[\s*(c|center|trans)\s*\]/i.test(nameLower);
         
         // Duration Detector (Finds [10f] or [ 2s ])
         var customDuration = null;

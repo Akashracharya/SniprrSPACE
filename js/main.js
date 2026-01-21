@@ -29,8 +29,9 @@ let isLoading = false;
 let loadContentTimer = null;
 // --- DYNAMIC BATCH SIZE ---
 function getBatchSize() {
-    if (activeTab === 'SFX') return 21; // 3x7
-    if (activeTab === 'GFX') return 6;  // 3x2
+    if (activeTab === 'SFX') return 60; // 3x7
+    if (activeTab === 'GFX') return 6;
+    if (activeTab === 'PRESETS') return 6;  // 3x2
     return 9; 
 }
 

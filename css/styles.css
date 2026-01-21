@@ -769,9 +769,28 @@ body {
     background: #333;
 }
 #assetGrid {
-    padding-bottom: 60px; /* Add extra space at bottom for the buttons */
+    padding-bottom: 60px;
+    overflow-y: auto;  /* ENABLE VERTICAL SCROLL */
+    overflow-x: hidden;
+    scroll-behavior: smooth; /* Add extra space at bottom for the buttons */
+}
+#assetGrid::-webkit-scrollbar {
+    width: 8px;
 }
 
+#assetGrid::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2); 
+    border-radius: 4px;
+}
+
+#assetGrid::-webkit-scrollbar-thumb {
+    background: #444; 
+    border-radius: 4px;
+}
+
+#assetGrid::-webkit-scrollbar-thumb:hover {
+    background: #7f00ff; /* Theme color on hover */
+}
 .float-btn {
     width: 30px;
     height: 30px;

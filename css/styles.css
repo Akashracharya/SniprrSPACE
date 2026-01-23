@@ -1219,7 +1219,7 @@ body {
 /* --- FLOATING FOLDER BUTTON --- */
 .floating-folder-btn {
     position: absolute;
-    top: 40px;   /* Positioned at bottom right */
+    top: 67px;   /* Positioned at bottom right */
     left: 15px;
     z-index: 100;   /* Above the grid items */
     

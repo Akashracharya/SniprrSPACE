@@ -168,51 +168,61 @@ body {
 /* Input Field */
 /* Input Field (3D Recessed Console Style) */
 .main-input {
-    /* Base Appearance */
-    background: #1a1a1a; /* Very dark background */
-    color: var(--text-main);
-    padding: 10px 12px; /* Comfortable padding */
-    border-radius: 6px;
+    /* Layout */
     width: 100%;
+    padding: 12px 14px; /* Slightly taller for a 'block' feel */
+    margin-bottom: 12px; /* Space below the block */
     box-sizing: border-box; 
-    margin-bottom: 1px;
     
+    /* Typography */
     font-family: 'Segoe UI', sans-serif;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.5px;
+    color: #ccc;
     outline: none;
 
-    /* --- 3D SUNKEN EFFECT --- */
-    border: none;
-    /* 1. Deep inner shadow at top (Depression) */
-    /* 2. Light highlight at bottom edge (Lip) */
+    /* 1. The Surface (Gradient for curvature) */
+    background: linear-gradient(145deg, #1e1e1e, #141414);
+    border-radius: 8px;
+
+    /* 2. 3D Edges (Highlight Top, Shadow Bottom) */
+    border: none; /* Reset */
+    border-top: 1px solid rgba(255,255,255,0.15);
+    border-left: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.8);
+    border-right: 1px solid rgba(0,0,0,0.8);
+
+    /* 3. The Lift (Drop Shadow) */
     box-shadow: 
-        inset 0 3px 8px rgba(0, 0, 0, 0.9), 
-        inset 0 1px 2px rgba(0, 0, 0, 1),
-        0 1px 0 rgba(255, 255, 255, 0.1); 
+        0 5px 15px rgba(0, 0, 0, 0.5), 
+        0 2px 4px rgba(0, 0, 0, 0.3);
         
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Faint bottom rim */
-    
-    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); 
 }
 
 /* Placeholder Text Color */
 .main-input::placeholder {
-    color: #444; /* Darker grey so it looks 'inside' the hole */
+    color: #666; 
     font-style: italic;
+    font-weight: 500;
 }
 
 /* FOCUS STATE (When typing) */
 .main-input:focus {
-    background: #0a0a0a; /* Slightly lighter */
     color: #fff;
+    background: #222; /* Slightly lighter when active */
     
-    /* Purple inner glow */
+    /* Purple Glow Border */
+    border-color: var(--accent-sfx);
+    border-top-color: rgba(127, 0, 255, 0.6);
+    border-bottom-color: rgba(0,0,0,0.9);
+    
+    /* Lift it slightly higher or make it glow */
+    transform: translateY(-1px);
     box-shadow: 
-        inset 0 2px 5px rgba(0, 0, 0, 0.8),
-        0 0 0 1px var(--accent-sfx), /* Thin accent border */
-        0 0 15px rgba(127, 0, 255, 0.15); /* Soft outer glow */
+        0 0 15px rgba(127, 0, 255, 0.25), /* Purple Glow */
+        0 8px 20px rgba(0,0,0,0.6); /* Soft outer glow */
 }
 /* Control Row for Frame Buttons */
 .control-row {

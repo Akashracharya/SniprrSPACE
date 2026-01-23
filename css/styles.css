@@ -232,36 +232,74 @@ body {
     margin-top: 10px;
 }
 
+/* --- 3D MINI BUTTONS (Floating Keys) --- */
 .mini-btn {
     flex: 1;
-    background: black;
-    color: white;
+    background: #0d0d0d; /* Deep dark base */
+    color: #cacaca;
+    
     padding: 6px 0;
     font-size: 11px;
-    font-weight: bold;
-    border-radius: 4px;
+    font-weight: 700;
+    border-radius: 6px;
     cursor: pointer;
     user-select: none;
     
-    /* --- 3D MINI --- */
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 3px; 
+    outline: none; /* <--- THIS FIXES THE ISSUE */
+    /* Initial 3D State (Subtle) */
     border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 
-        0 3px 0 #0f0f0f,
-        0 3px 6px rgba(19, 19, 19, 0.3);
-        
-    transition: all 0.1s ease;
-    margin-bottom: 3px; /* Compensate for 3px shadow */
+    background: rgb(19, 19, 19);
+    /* 3D Border Lighting */
+    border: 1px solid rgba(0,0,0,0.5); 
+    border-top: 1px solid rgba(255,255,255,0.15); /* Top highlight */
+    border-bottom: 1px solid rgba(0,0,0,0.8); 
+    
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+/* --- HOVER STATE (High 3D Pop) --- */
 .mini-btn:hover {
-    background: var(--text-main);
-    color: var(--bg-deep);
+    background: var(--text-main); /* White */
+    color: var(--bg-deep);        /* Black Text */
+    
+    /* 1. Physical Lift */
+    transform: translateY(-1px);
+    
+    /* 2. The "3D Bevel" Look */
+    box-shadow: 
+        /* Top Edge Highlight */
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        
+        /* Bottom Edge Thickness (The "Lip") */
+        inset 0 -3px 0 rgba(0, 0, 0, 0.1),
+        
+        /* Deep Drop Shadow */
+        0 6px 12px rgba(0, 0, 0, 0.6);
+        
+    border-top: 1px solid rgba(255,255,255,0.3);
 }
-
+.mini-btn:focus {
+    outline: none;
+}
+/* --- ACTIVE STATE (Pressed Glow) --- */
 .mini-btn:active {
-    transform: translateY(3px);
-    box-shadow: none;
+    background: var(--accent-sfx); /* Purple */
+    color: #ffffff;
+    
+    /* 3. Sink In Effect */
+    transform: translateY(1px); 
+    
+    /* 4. Inner Shadow + Outer Glow */
+    box-shadow: 
+        inset 0 2px 5px rgba(0,0,0,0.3), /* Deep press */
+        0 0 15px rgba(127, 0, 255, 0.5); /* Purple Glow */
+        
+    border: none;
 }
 
 /* Edit Grid (Delete/Split) */
@@ -848,15 +886,31 @@ body {
 
 .frame-group-capsule {
     flex: 1; 
-    gap: 3px;
-    height:37px;
     display: flex;
     align-items: center;
     justify-content: space-evenly;
-    background: var(--bg-hover);
-    border: 1px solid var(--border);
-    border-radius: 8px; 
-    padding: 0 10px;
+    gap: 4px;
+    
+    /* Taller height to look like a substantial physical object */
+    height: 40px; 
+    padding: 4px;
+    box-sizing: border-box;
+
+    /* 1. The Surface (Dark Gradient) */
+    background: linear-gradient(145deg, #1e1e1e, #141414);
+    border-radius: 10px;
+
+    /* 2. 3D Edges (Highlight Top/Left, Shadow Bottom/Right) */
+    border: none; /* Reset old borders */
+    border-top: 1px solid rgba(255,255,255,0.15);
+    border-left: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.8);
+    border-right: 1px solid rgba(0,0,0,0.8);
+
+    /* 3. The Lift (Drop Shadow) */
+    box-shadow: 
+        0 5px 15px rgba(0,0,0,0.5), 
+        0 2px 5px rgba(0,0,0,0.3);
 }
 
 .pre-comp-btn{

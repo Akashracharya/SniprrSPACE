@@ -309,6 +309,9 @@ body {
     gap: 8px;
     margin-top: 10px;
 }
+.delete-btn{
+    width: 57px;
+}
 
 .delete-btn:hover {
     background: #ff3355 !important; 
@@ -361,9 +364,9 @@ body {
     background: var(--bg-hover);
     color: var(--text-main);
     padding: 6px 1px; /* Less horizontal padding */
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
-    height: 35px;
+    height: 38px;
     /* Smaller font is crucial for "PRE-COMP" to fit in 1/4th width */
     font-size: 10px; 
     font-weight: 800;
@@ -1412,5 +1415,47 @@ body {
 
 /* Ensure buttons inside stretch to fill height */
 .layer-creation-dock .mini-btn {
+    height: 100%;
+}
+
+/* --- SPLIT DOCK ROW (Holds two docks side-by-side) --- */
+.split-dock-row {
+    display: flex;
+    gap: 10px;          /* Space between the two docks */
+    margin-bottom: 12px; /* Space below this row */
+    width: 100%;
+}
+
+/* --- THE 3D DOCK CONTAINER (Generic) --- */
+/* This reuses the same 3D style as the Layer Dock */
+.dock-container {
+    flex: 1;            /* Each dock takes 50% width */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;           /* Space between buttons inside */
+    
+    height: 40px;       /* Consistent 3D Height */
+    padding: 6px;
+    box-sizing: border-box;
+
+    /* 3D Slab Appearance */
+    background: linear-gradient(145deg, #1e1e1e, #141414);
+    border-radius: 10px;
+
+    /* 3D Edges */
+    border-top: 1px solid rgba(255,255,255,0.15);
+    border-left: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.8);
+    border-right: 1px solid rgba(0,0,0,0.8);
+
+    /* Lift Shadow */
+    box-shadow: 
+        0 5px 15px rgba(0,0,0,0.5), 
+        0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* Make sure the buttons inside fill the dock height */
+.dock-container .mini-btn {
     height: 100%;
 }

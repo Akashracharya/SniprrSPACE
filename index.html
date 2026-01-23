@@ -41,16 +41,28 @@
                         <button class="mini-btn" onclick="runScript('createLayer', 'camera')">CAM</button>
                         <button class="mini-btn" onclick="runScript('createLayer', 'text')">TXT</button>
                     </div>
+                    <div class="split-dock-row">
+
+                        <div class="dock-container">
+                            <button class="mini-btn" onclick="runScript('trimSelectedLayers', 'left')">TRM [</button>
+                            <button class="mini-btn" onclick="runScript('trimSelectedLayers', 'right')">TRM ]</button>
+                        </div>
+
+                        <div class="dock-container">
+                            <button class="mini-btn" onclick="runScript('moveLayerPoint', 'in')">inP</button>
+                            <button class="mini-btn" onclick="runScript('moveLayerPoint', 'out')">outP</button>
+                        </div>
+                        
+                        <button class="tool-btn delete-btn" onclick="runScript('deleteSelectedLayers')">DLT</button>
+
+
+                    </div>
 
                     <div class="compact-grid">
                         <button class="tool-btn" onclick="runScript('fitToComp')">FIT</button>
-                        <button class="tool-btn delete-btn" onclick="runScript('deleteSelectedLayers')">DLT</button>
                         <button class="tool-btn" onclick="runScript('setBlendingMode', 'ADD')">ADD</button>
-                        <button class="tool-btn" onclick="runScript('trimSelectedLayers', 'left')">TRM [</button>
-                        <button class="tool-btn" onclick="runScript('trimSelectedLayers', 'right')">TRM ]</button>
-                        <button class="tool-btn" onclick="runScript('moveLayerPoint', 'in')">inP</button>
-                        <button class="tool-btn" onclick="runScript('moveLayerPoint', 'out')">outP</button>
                     </div>
+
 
                     <div class="mixed-control-row">
                         <div class="frame-group-capsule">
@@ -67,7 +79,6 @@
                 </div>
 
                 <div class="tools-right-col">
-                    <div class="anchor-pad-label">ANCHOR</div>
                     <div class="anchor-grid">
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 1)"></div>
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 2)"></div>

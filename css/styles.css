@@ -876,7 +876,33 @@ body {
 .sfx-nav-bar::-webkit-scrollbar {
     height: 2px;
 }
-
+#categoryNavBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    width: 96%;
+    height: 37px;
+    margin: 15px auto; /* Increased spacing for the shadow */
+    padding: 5px;
+    padding-left: 6px;
+    padding-right: 6px;
+    gap: 8px;
+    box-sizing: border-box;
+    
+    /* 1. The Surface (Slightly lighter than background) */
+    background: linear-gradient(145deg, #1e1e1e, #141414);
+    border-radius: 20px;
+    
+    /* 2. The 3D Edges (Highligts Top/Left, Shadows Bottom/Right) */
+    border-top: 1px solid rgba(255,255,255,0.15);
+    border-left: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.8);
+    border-right: 1px solid rgba(0,0,0,0.8);
+    
+    /* 3. The Lift (Big Drop Shadow) */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.6), 0 4px 6px rgba(0,0,0,0.4);  
+}
 /* --- ANIMATED PILL BUTTON --- */
 .sfx-cat-btn {
     display: flex;
@@ -932,24 +958,48 @@ body {
 
 .sfx-cat-btn:hover,
 .sfx-cat-btn.active {
-    background: var(--text-main);
+   background: var(--text-main);
     color: var(--bg-deep);
     
-    /* Lift effect */
+    /* 1. Physical Lift */
+    transform: translateY(-2px); 
+    
+    /* 2. 3D Bevel Effect */
     box-shadow: 
-        0 5px 15px rgba(0, 0, 0, 0.6),
-        inset 0 -2px 0 rgba(0,0,0,0.1); /* Inner bottom shade */
+        /* Top Inner Highlight (Light hitting the top edge) */
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        
+        /* Bottom Inner Shade (Curvature/Thickness) */
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+        
+        /* Drop Shadow (Height from ground) */
+        0 6px 15px rgba(0, 0, 0, 0.6);
         
     padding: 0 14px; 
-    transform: translateY(-1px); /* Slight float up */
+    border-top: 1px solid rgba(255,255,255,0.3); /* Adds a crisp top edge */
 }
 
 .sfx-cat-btn.active {
     background: var(--accent-sfx);
-    border-color: var(--accent-sfx);
     color: #fff;
-    /* Glow */
-    box-shadow: 0 0 15px rgba(127, 0, 255, 0.5);
+    
+    /* 1. Pop Out 3D Transform */
+    transform: translateY(-2px) scale(1.05); 
+    z-index: 10; /* Ensure it floats above neighbors */
+    
+    /* 2. Glowing 3D Shadow */
+    box-shadow: 
+        /* Crisp Top Highlight */
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        
+        /* Deep Bottom Shade */
+        inset 0 -2px 0 rgba(0, 0, 0, 0.3),
+        
+        /* The Glow (Colored Light) */
+        0 0 20px rgba(127, 0, 255, 0.6),
+        0 5px 10px rgba(0, 0, 0, 0.5);
+        
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Reveal Text */

@@ -38,6 +38,7 @@ function importFile(filePath) {
 
 // 7. STRICT APPLY PRESET (Fixed: No .trim() error)
 // 8. FINAL ROBUST APPLY PRESET (Decodes URI + Flexible Tagging)
+// 16. FINAL HOST.JSX (Includes [direct] support)
 function applyPreset(presetPath) {
     app.beginUndoGroup("Sniprr Apply Preset");
 
@@ -50,7 +51,7 @@ function applyPreset(presetPath) {
             return;
         }
 
-        // We need to read the tags BEFORE deciding if we need a selected layer
+        // 1. ANALYZE FILE NAME
         var presetFile = new File(presetPath);
         if (!presetFile.exists) {
             presetFile = new File(decodeURIComponent(presetPath));
@@ -60,20 +61,22 @@ function applyPreset(presetPath) {
             }
         }
 
-        // --- 1. CLEAN & DECODE NAME ---
         var decodedName = decodeURIComponent(presetFile.name);
         var nameLower = decodedName.toLowerCase();
+
+        // Create Clean Name (No tags) for new layers
         var layerName = decodedName
             .replace(/\.ffx$/i, "")         // Remove extension
-            .replace(/\[.*?\]/g, "")        // Remove [adj], [10f], etc.
-            .replace(/\s+/g, " ")           // Collapse double spaces
-            .replace(/^\s+|\s+$/g, '');     // Trim start/end spaces
+            .replace(/\[.*?\]/g, "")        // Remove [tags]
+            .replace(/\s+/g, " ")           // Collapse spaces
+            .replace(/^\s+|\s+$/g, '');     // Trim
 
         // --- 2. PARSE TAGS ---
-        var isFull  = /\[\s*full\s*\]/i.test(nameLower); // [full]
-        var isNull  = /\[\s*null\s*\]/i.test(nameLower);
-        var isSolid = /\[\s*(s|sol|solid|white|flash)\s*\]/i.test(nameLower);
-        var isBlack = /\[\s*(black|shadow)\s*\]/i.test(nameLower);
+        var isDirect = /\[\s*direct\s*\]/i.test(nameLower); // NEW: [direct]
+        var isFull   = /\[\s*full\s*\]/i.test(nameLower);
+        var isNull   = /\[\s*null\s*\]/i.test(nameLower);
+        var isSolid  = /\[\s*(s|sol|solid|white|flash)\s*\]/i.test(nameLower);
+        var isBlack  = /\[\s*(black|shadow)\s*\]/i.test(nameLower);
         var isCentered = /\[\s*(c|center|trans)\s*\]/i.test(nameLower);
 
         var customDuration = null;
@@ -86,95 +89,96 @@ function applyPreset(presetPath) {
             else if (unit === 'f') customDuration = val * comp.frameDuration;
         }
 
-        // [EDITED: New Logic for Selection vs Global]
+        // --- 3. CHECK SELECTION ---
         var targets = comp.selectedLayers;
         var runGlobal = false;
 
-        // If nothing is selected...
         if (targets.length === 0) {
-            if (isFull) {
-                // ...but it is [full], enable Global Mode
+            // Logic: [direct] MUST have a selection. 
+            // Only [full] WITHOUT [direct] can run globally.
+            if (isFull && !isDirect) {
                 runGlobal = true; 
             } else {
-                alert("SniprrError: No Layer Selected.\nPlease select a layer");
+                alert("SniprrError: No Layer Selected.\nPlease select a layer.");
                 return; 
             }
         }
 
-        // Define how many times to loop
         var loopCount = runGlobal ? 1 : targets.length;
 
-        // --- 3. EXECUTE ---
+        // --- 4. EXECUTE ---
         for (var i = 0; i < loopCount; i++) {
             
-            // [EDITED: Handle null target if global]
             var targetLayer = runGlobal ? null : targets[i];
+            var newLayer;
 
-            // A. Calculate Duration & Start Time
+            // A. Timing Logic
             var finalDuration = 0;
             var startTime = 0;
 
             if (isFull) {
-                // [full] -> Cover entire composition 0 to End
                 startTime = 0;
                 finalDuration = comp.duration;
             } 
             else {
-                // Standard Logic (Requires targetLayer)
-                if (customDuration !== null) {
-                    finalDuration = customDuration;
-                } else {
-                    // Default: Full Clip
-                    finalDuration = targetLayer.outPoint - targetLayer.inPoint;
+                // If Direct, we default to layer start, but we won't trim it later
+                if (customDuration !== null) finalDuration = customDuration;
+                else {
+                    finalDuration = targetLayer ? (targetLayer.outPoint - targetLayer.inPoint) : comp.duration;
                     if (isCentered) finalDuration = 1.0;
                 }
-
-                // Calculate Start Time based on target
-                if (isCentered) {
-                    startTime = targetLayer.inPoint - (finalDuration / 2);
-                } else {
-                    startTime = targetLayer.inPoint;
+                
+                if (targetLayer) {
+                     if (isCentered) startTime = targetLayer.inPoint - (finalDuration / 2);
+                     else startTime = targetLayer.inPoint;
                 }
             }
 
-            // Move CTI
+            // Move CTI (Crucial for keyframes)
             comp.time = startTime;
 
-            // B. Create Layer
-            var newLayer;
-            if (isNull) {
-                newLayer = comp.layers.addNull();
-                newLayer.label = 1;
-            }
-            else if (isSolid) {
-                newLayer = comp.layers.addSolid([1, 1, 1], layerName, comp.width, comp.height, comp.pixelAspect);
-                newLayer.label = 5;
-            }
-            else if (isBlack) {
-                newLayer = comp.layers.addSolid([0, 0, 0], layerName, comp.width, comp.height, comp.pixelAspect);
-                newLayer.label = 15;
-            }
+            // B. Layer Creation Logic
+            if (isDirect) {
+                // [DIRECT MODE]: Apply to the existing layer
+                if (!targetLayer) continue; // Safety check
+                newLayer = targetLayer;
+            } 
             else {
-                newLayer = comp.layers.addSolid([1, 1, 1], layerName, comp.width, comp.height, comp.pixelAspect);
-                newLayer.adjustmentLayer = true;
-                newLayer.label = 8;
+                // [NORMAL MODE]: Create a new container layer
+                if (isNull) {
+                    newLayer = comp.layers.addNull();
+                    newLayer.label = 1;
+                }
+                else if (isSolid) {
+                    newLayer = comp.layers.addSolid([1, 1, 1], layerName, comp.width, comp.height, comp.pixelAspect);
+                    newLayer.label = 5;
+                }
+                else if (isBlack) {
+                    newLayer = comp.layers.addSolid([0, 0, 0], layerName, comp.width, comp.height, comp.pixelAspect);
+                    newLayer.label = 15;
+                }
+                else {
+                    // Default: Adjustment Layer
+                    newLayer = comp.layers.addSolid([1, 1, 1], layerName, comp.width, comp.height, comp.pixelAspect);
+                    newLayer.adjustmentLayer = true;
+                    newLayer.label = 8;
+                }
+
+                // Place above target
+                if (targetLayer) newLayer.moveBefore(targetLayer);
+                else newLayer.moveToBeginning();
             }
 
-            // [EDITED: Placement Logic]
-            // If we have a target, go above it. If Global, go to top of stack.
-            if (targetLayer) {
-                newLayer.moveBefore(targetLayer);
-            } else {
-                newLayer.moveToBeginning();
-            }
-
-            // Apply Preset
+            // C. Apply Preset
             try { newLayer.applyPreset(presetFile); } catch (e) { }
 
-            // C. FORCE PROPERTIES
-            newLayer.name = layerName;
-            newLayer.inPoint = startTime;
-            newLayer.outPoint = startTime + finalDuration;
+            // D. Force Properties (ONLY for new layers)
+            // If [direct], we leave the layer name and duration alone
+            if (!isDirect) {
+                newLayer.name = layerName;
+                newLayer.inPoint = startTime;
+                newLayer.outPoint = startTime + finalDuration;
+            }
         }
 
     } catch (err) {

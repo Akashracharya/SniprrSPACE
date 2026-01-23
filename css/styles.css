@@ -1182,6 +1182,7 @@ body {
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    user-select: none;
 }
 .thumb-title::after {
     content: '';
@@ -1205,6 +1206,7 @@ body {
     font-weight: bold;
     letter-spacing: 1px;
     border: 1px solid rgba(255,255,255,0.05);
+    user-select: none   ;
 }
 
 /* --- HOVER VIDEO (Hidden by default) --- */

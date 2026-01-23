@@ -1380,3 +1380,37 @@ body {
     padding: 4px 8px;
     margin-top: 10px;
 }
+
+/* --- LAYER CREATION DOCK (3D Row) --- */
+.layer-creation-dock {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    
+    width: 100%;
+    height: 40px; /* Taller to feel physical */
+    margin-bottom: 12px; /* Space before the grid */
+    padding: 6px;
+    box-sizing: border-box;
+
+    /* 1. The 3D Surface (Dark Gradient) */
+    background: linear-gradient(145deg, #1e1e1e, #141414);
+    border-radius: 10px;
+
+    /* 2. 3D Edges */
+    border-top: 1px solid rgba(255,255,255,0.15);
+    border-left: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.8);
+    border-right: 1px solid rgba(0,0,0,0.8);
+
+    /* 3. The Lift (Drop Shadow) */
+    box-shadow: 
+        0 5px 15px rgba(0,0,0,0.5), 
+        0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* Ensure buttons inside stretch to fill height */
+.layer-creation-dock .mini-btn {
+    height: 100%;
+}

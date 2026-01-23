@@ -34,12 +34,15 @@
             <div class="tools-flex-wrapper">
 
                 <div class="tools-left-col">
+                    <div class="layer-creation-dock">
+                        <button class="mini-btn" onclick="runScript('createLayer', 'adjustment')">ADJ</button>
+                        <button class="mini-btn" onclick="runScript('createLayer', 'null')">NULL</button>
+                        <button class="mini-btn" id="btnSolid">SOL</button>
+                        <button class="mini-btn" onclick="runScript('createLayer', 'camera')">CAM</button>
+                        <button class="mini-btn" onclick="runScript('createLayer', 'text')">TXT</button>
+                    </div>
+
                     <div class="compact-grid">
-                        <button class="tool-btn" onclick="runScript('createLayer', 'adjustment')">ADJ</button>
-                        <button class="tool-btn" onclick="runScript('createLayer', 'null')">NULL</button>
-                        <button class="tool-btn" onclick="runScript('createLayer', 'camera')">CAM</button>
-                        <button class="tool-btn" onclick="runScript('createLayer', 'text')">TEXT</button>
-                        <button class="tool-btn" id="btnSolid">SLD</button>
                         <button class="tool-btn" onclick="runScript('fitToComp')">FIT</button>
                         <button class="tool-btn delete-btn" onclick="runScript('deleteSelectedLayers')">DLT</button>
                         <button class="tool-btn" onclick="runScript('setBlendingMode', 'ADD')">ADD</button>

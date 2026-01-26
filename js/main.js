@@ -21,6 +21,8 @@ let activeCategory = '';
 let currentAudio = null;
 let currentTabIndex = 3; 
 let scrollDebounce = 0;
+let snapFolderPath = localStorage.getItem('sniprr_snap_path') || '';
+
 
 // --- PAGINATION VARIABLES ---
 let allFiles = [];      
@@ -39,6 +41,7 @@ function init() {
     setupTabs();
     setupMainTools();
     setupFolderButton();
+    setupSnapTools();
 
     // Default to MAIN on load
     document.querySelector('.tab-btn[data-tab="MAIN"]').click(); 
@@ -182,6 +185,80 @@ function loadCategories(tabName) {
         });
     });
 }
+
+
+
+
+// [REPLACE THE PREVIOUS setupSnapTools FUNCTION WITH THIS]
+
+function setupSnapTools() {
+    const btnSnap = document.getElementById('btnSnap');
+    
+    // Load existing path
+    let snapFolderPath = localStorage.getItem('sniprr_snap_path') || '';
+
+    if (btnSnap) {
+        btnSnap.onclick = (e) => {
+            // A. SHIFT+CLICK: Force Change Folder
+            if (e.shiftKey) {
+                const result = window.cep.fs.showOpenDialog(false, true, "Select New Snapshot Folder", snapFolderPath, []);
+                if (result.data && result.data.length > 0) {
+                    snapFolderPath = result.data[0];
+                    localStorage.setItem('sniprr_snap_path', snapFolderPath);
+                    alert("Folder updated!");
+                }
+                return;
+            }
+        
+            // 2. Setup Logic (Same as before)
+            if (!snapFolderPath) {
+                const result = window.cep.fs.showOpenDialog(false, true, "Select Folder to Save Snapshots", "", []);
+                if (result.data && result.data.length > 0) {
+                    snapFolderPath = result.data[0];
+                    localStorage.setItem('sniprr_snap_path', snapFolderPath);
+                } else {
+                    return; 
+                }
+            }
+        
+            // --- NEW TIMER LOGIC STARTS HERE ---
+            
+            let safePath = snapFolderPath.replace(/\\/g, "/");
+            btnSnap.innerText = "SV..."; // Visual: "Saving..."
+        
+            // STEP 1: Call SAVE function
+            csInterface.evalScript(`saveSnapshot("${safePath}")`, (resultPath) => {
+                
+                // Check for errors returned from JSX
+                if (resultPath.indexOf("ERROR") !== -1) {
+                    alert(resultPath);
+                    btnSnap.innerText = "SNAP";
+                    return;
+                }
+        
+                // STEP 2: Wait 1500ms (1.5 Seconds)
+                // This is the timer you requested. It runs in JS so AE doesn't freeze.
+                btnSnap.innerText = "WT..."; // Visual: "Waiting..."
+                
+                setTimeout(() => {
+                    
+                    // STEP 3: Call IMPORT function
+                    // We must escape backslashes for the string to pass correctly
+                    const cleanImportPath = resultPath.replace(/\\/g, "\\\\");
+                    
+                    csInterface.evalScript(`importSnapshot("${cleanImportPath}")`);
+                    
+                    // Done
+                    btnSnap.innerText = "✓";
+                    setTimeout(() => btnSnap.innerText = "SNAP", 1000);
+                    
+                }, 1500); // <--- CHANGE THIS NUMBER (ms) if you need more/less time
+            });
+        };
+}
+}
+
+
 
 function loadGrid(tabName, category) {
     const grid = document.getElementById('assetGrid');
@@ -467,7 +544,12 @@ function setupMainTools() {
             csInterface.evalScript(`doPrecompose(${e.shiftKey}, "${name}")`);
         };
     }
-    
+    const btnUnPre = document.getElementById('btnUnPrecompose');
+    if(btnUnPre) {
+        btnUnPre.onclick = () => {
+            csInterface.evalScript('unPrecompose()');
+        };
+    }
     // Solid Color Modal
     const btnSolid = document.getElementById('btnSolid');
     const modal = document.getElementById('colorModal');

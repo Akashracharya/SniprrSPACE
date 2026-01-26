@@ -187,6 +187,79 @@ function applyPreset(presetPath) {
 
     app.endUndoGroup();
 }
+
+// [APPEND TO BOTTOM OF host.jsx]
+
+// [REPLACE THE PREVIOUS saveSnapshot FUNCTION WITH THIS]
+
+// [REPLACE saveSnapshot WITH THESE TWO FUNCTIONS]
+
+// PHASE 1: SAVE ONLY
+function saveSnapshot(folderPath) {
+    app.beginUndoGroup("Sniprr Snapshot Save");
+    var savedPath = ""; // We will return this path to JS
+    
+    try {
+        // --- ROBUST COMP FINDER (Fixes the "Layer Selection" bug) ---
+        var comp = app.project.activeItem;
+        if (!comp || !(comp instanceof CompItem)) {
+            // If Project Panel is focused, check the Active Viewer
+            if (app.activeViewer && app.activeViewer.activeComp) {
+                comp = app.activeViewer.activeComp;
+            }
+        }
+        
+        if (!comp || !(comp instanceof CompItem)) {
+            return "ERROR: No Composition found. Click inside the Timeline.";
+        }
+
+        // --- SAVE LOGIC ---
+        var f = new Folder(folderPath);
+        if (!f.exists) return "ERROR: Folder not found.";
+
+        function pad(n, width) { return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n; }
+        
+        // Create unique name
+        var safeName = comp.name.replace(/[^a-z0-9]/gi, '_').toLowerCase().substr(0, 20);
+        var frame = Math.round(comp.time / comp.frameDuration);
+        var timestamp = new Date().getTime().toString().slice(-5);
+        var fileName = safeName + "_" + pad(frame + "", 5) + "_" + timestamp + ".png";
+        
+        var fileObj = new File(f.fsName + "/" + fileName);
+        
+        // Save
+        comp.saveFrameToPng(comp.time, fileObj);
+        savedPath = fileObj.fsName;
+
+    } catch (err) {
+        return "ERROR: " + err.toString();
+    }
+    app.endUndoGroup();
+    
+    return savedPath; // Send path back to JavaScript
+}
+
+// PHASE 2: IMPORT ONLY
+function importSnapshot(filePath) {
+    app.beginUndoGroup("Sniprr Snapshot Import");
+    try {
+        var fileObj = new File(filePath);
+        
+        if (fileObj.exists) {
+            var io = new ImportOptions(fileObj);
+            io.sequence = false;
+            var importedItem = app.project.importFile(io);
+            importedItem.selected = true; // Highlight it
+        } else {
+            alert("Import Failed: File system was too slow.\nTry increasing the timer.");
+        }
+    } catch(err) {
+        // alert("Import Error: " + err.toString());
+    }
+    app.endUndoGroup();
+}
+
+
 // 3. CREATE LAYER (Fixed: Naming applied to Source & Layer)
 function createLayer(type, colorHex, userLabel) {
     app.beginUndoGroup("Sniprr Create " + type);
@@ -592,5 +665,81 @@ function setBlendingMode(modeName) {
             }
         }
     } catch (err) { alert(err.toString()); }
+    app.endUndoGroup();
+}
+
+// [APPEND TO BOTTOM OF host.jsx]
+
+function unPrecompose() {
+    app.beginUndoGroup("Sniprr Un-Precompose");
+    
+    var comp = app.project.activeItem;
+    if (!(comp instanceof CompItem) || comp.selectedLayers.length !== 1) {
+        alert("Please select exactly one Pre-comp layer to un-precompose.");
+        app.endUndoGroup();
+        return;
+    }
+
+    var layer = comp.selectedLayers[0];
+    
+    // Verify it is a pre-comp
+    if (layer.source === null || !(layer.source instanceof CompItem)) {
+        alert("Selected layer is not a Pre-composition.");
+        app.endUndoGroup();
+        return;
+    }
+
+    var precomp = layer.source;
+    var startTimeOffset = layer.startTime;
+    var layerIndex = layer.index;
+
+    // 1. Open Precomp and Copy Layers
+    precomp.openInViewer();
+    var preLayers = precomp.layers;
+    
+    if (preLayers.length === 0) {
+        // Empty comp, just delete the layer in main?
+        comp.openInViewer();
+        layer.remove();
+        app.endUndoGroup();
+        return;
+    }
+
+    // Select all layers inside precomp
+    for (var i = 1; i <= preLayers.length; i++) {
+        preLayers[i].selected = true;
+    }
+    
+    // Copy to clipboard
+    app.executeCommand(app.findMenuCommandId("Copy"));
+    
+    // Deselect to be clean
+    for (var i = 1; i <= preLayers.length; i++) {
+        preLayers[i].selected = false;
+    }
+
+    // 2. Paste in Main Comp
+    comp.openInViewer(); // Switch back to main comp
+    layer.selected = false; // Deselect the precomp layer so we don't paste *into* it or replace it depending on prefs
+
+    app.executeCommand(app.findMenuCommandId("Paste"));
+
+    // 3. Retime and Move Pasted Layers
+    var pastedLayers = comp.selectedLayers;
+    
+    // We iterate backwards to maintain relative order when moving
+    for (var i = 0; i < pastedLayers.length; i++) {
+        var pLayer = pastedLayers[i];
+        
+        // Offset time by the Pre-comp's start time
+        pLayer.startTime += startTimeOffset;
+        
+        // Move to the index where the Pre-comp was
+        pLayer.moveBefore(layer);
+    }
+    
+    // 4. Remove original Pre-comp layer
+    layer.remove();
+
     app.endUndoGroup();
 }

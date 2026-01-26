@@ -30,7 +30,6 @@ assets/**/*.m4v
 
 
 # Images
-assets/**/*.png
 assets/**/*.jpg
 assets/**/*.jpeg
 

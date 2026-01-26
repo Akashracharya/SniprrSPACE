@@ -28,18 +28,31 @@
         </div>
 
         <div class="tools-view hidden" id="toolsView">
+            <div class="upper">
 
-            <input type="text" id="layerNameInput" class="main-input" placeholder="Comp Name...">
+                <input type="text" id="layerNameInput" class="main-input" placeholder="Comp Name...">
+                <div class="pre-comp-group" style="display:flex; gap:4px;">
+                    <button class="mini-btn pre-comp-btn" id="btnPrecompose"
+                        title="Click: Group Layers&#10;Shift+Click: Separate Pre-comps">PRE</button>
+                    <button class="mini-btn pre-comp-btn" id="btnUnPrecompose"
+                        title="Un-Precompose Selection">UN-PRE</button>
+                </div>
+
+            </div>
 
             <div class="tools-flex-wrapper">
 
                 <div class="tools-left-col">
-                    <div class="layer-creation-dock">
-                        <button class="mini-btn" onclick="runScript('createLayer', 'adjustment')">ADJ</button>
-                        <button class="mini-btn" onclick="runScript('createLayer', 'null')">NULL</button>
-                        <button class="mini-btn" id="btnSolid">SOL</button>
-                        <button class="mini-btn" onclick="runScript('createLayer', 'camera')">CAM</button>
-                        <button class="mini-btn" onclick="runScript('createLayer', 'text')">TXT</button>
+                    <div class="split-dock-row">
+                        <div class="layer-creation-dock">
+                            <button class="mini-btn" onclick="runScript('createLayer', 'adjustment')">ADJ</button>
+                            <button class="mini-btn" onclick="runScript('createLayer', 'null')">NULL</button>
+                            <button class="mini-btn" id="btnSolid">SOL</button>
+                            <button class="mini-btn" onclick="runScript('createLayer', 'camera')">CAM</button>
+                            <button class="mini-btn" onclick="runScript('createLayer', 'text')">TXT</button>
+                        </div>
+                        <button class="tool-btn delete-btn" onclick="runScript('deleteSelectedLayers')">DLT</button>
+
                     </div>
                     <div class="split-dock-row">
 
@@ -52,8 +65,7 @@
                             <button class="mini-btn" onclick="runScript('moveLayerPoint', 'in')">inP</button>
                             <button class="mini-btn" onclick="runScript('moveLayerPoint', 'out')">outP</button>
                         </div>
-                        
-                        <button class="tool-btn delete-btn" onclick="runScript('deleteSelectedLayers')">DLT</button>
+
 
 
                     </div>
@@ -73,7 +85,11 @@
                             <button class="mini-btn" onclick="runScript('moveCTI', 5)">+5</button>
                             <button class="mini-btn" onclick="runScript('moveCTI', 10)">+10</button>
                         </div>
-                        <button class="tool-btn pre-comp-btn" id="btnPrecompose">PRE-COMP</button>
+                    <div class="snap-dock-container">
+                        <p>Shift+Click for Folder</p>
+                        <button class="mini-btn" id="btnSnap"
+                                title="Click: Save Snapshot&#10;Shift+Click: Change Folder">SNAP</button>
+                    </div>
 
                     </div>
                 </div>

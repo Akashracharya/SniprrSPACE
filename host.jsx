@@ -525,6 +525,35 @@ function centerLayer() {
 }
 
 
+// [APPEND TO BOTTOM OF host.jsx]
+
+// HUE: Adds "Hue/Saturation" effect to selected layers
+function applyHueSaturation() {
+    app.beginUndoGroup("Sniprr Add Hue/Sat");
+    var comp = app.project.activeItem;
+    
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            
+            // Skip locked layers
+            if (layer.locked) continue;
+
+            try {
+                // Check if layer can hold effects (Cameras/Lights usually can't)
+                if (layer.property("Effects")) {
+                    // "ADBE HUE SATURATION" is the universal match name
+                    layer.property("Effects").addProperty("ADBE HUE SATURATION");
+                }
+            } catch (err) {
+                // Ignore layers that don't accept effects
+            }
+        }
+    }
+    app.endUndoGroup();
+}
+
 // 7. ANCHOR POINT (Fixed: Robust 2D/3D Math)
 // [PARTIAL UPDATE - Replace the existing setAnchorPoint function]
 

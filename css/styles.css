@@ -1098,10 +1098,10 @@ body {
 
 .tools-right-col {
     width: auto;
-    flex-shrink: 0; /* Don't shrink the anchor pad */
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 22px;
 }
 
 /* Update Compact Grid to fit Left Column (3 Columns instead of 5) */
@@ -1522,7 +1522,7 @@ body {
     /* Flexible height to fit content, but at least 50px */
     height: auto;
     min-height: 52px; 
-    width: 100%;
+    width: 82%;
     
     padding: 6px 8px; /* Horizontal padding ensures button isn't too wide */
     box-sizing: border-box;
@@ -1553,7 +1553,7 @@ body {
     
     /* Metallic / Dim Look */
     color: #666; 
-    font-size: 8px; /* Very small UI label size */
+    font-size: 9px; /* Very small UI label size */
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;

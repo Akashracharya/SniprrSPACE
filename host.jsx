@@ -361,6 +361,7 @@ function createLayer(type, colorHex, userLabel) {
     app.endUndoGroup();
 }
 
+
 // 4. PRE-COMPOSE (Fixed: Explicit Renaming)
 function doPrecompose(individual, userLabel) {
     app.beginUndoGroup("Sniprr Pre-compose");
@@ -435,8 +436,12 @@ function doPrecompose(individual, userLabel) {
 
 
 // 6. FIT TO COMP (Fixed: No Shrink, Maintain Aspect)
+// [REPLACE the existing fitToComp function with this updated version]
+
+// 6. FIT TO COMP (Updated: FILL COMP logic)
+// Scales the layer to completely cover the composition (no black bars)
 function fitToComp() {
-    app.beginUndoGroup("Sniprr Fit");
+    app.beginUndoGroup("Sniprr Fit Fill");
 
     var comp = app.project.activeItem;
     if (!(comp && comp instanceof CompItem)) {
@@ -454,42 +459,37 @@ function fitToComp() {
 
     for (var i = 0; i < sel.length; i++) {
         var layer = sel[i];
-
-        // Skip locked layers
         if (layer.locked) continue;
-
-        // Skip cameras & lights
         if (layer instanceof CameraLayer || layer instanceof LightLayer) continue;
 
-        // Reset scale to get true dimensions
+        // Reset scale to 100 to get accurate source dimensions
+        var currentScale = layer.transform.scale.value;
         layer.transform.scale.setValue(layer.threeDLayer ? [100, 100, 100] : [100, 100]);
 
         var rect = layer.sourceRectAtTime(t, false);
-        if (!rect || rect.width === 0 || rect.height === 0) continue;
-
-        // Aspect ratios
-        var layerAR = rect.width / rect.height;
-        var compAR = comp.width / comp.height;
-
-        var scale;
-
-        // Decide fit based on dominant dimension
-        if (layerAR > compAR) {
-            // Wider → fit by width
-            scale = (comp.width / rect.width) * 100;
-        } else {
-            // Taller → fit by height
-            scale = (comp.height / rect.height) * 100;
+        
+        // Safety check for empty layers
+        if (!rect || rect.width === 0 || rect.height === 0) {
+            // Restore previous scale if we can't calculate
+            layer.transform.scale.setValue(currentScale);
+            continue;
         }
 
-        // Apply scale
+        // Calculate Scale needed for Width and Height
+        var scaleX = comp.width / rect.width;
+        var scaleY = comp.height / rect.height;
+
+        // FILL LOGIC: Choose the LARGER scale factor to ensure coverage
+        var finalScale = Math.max(scaleX, scaleY) * 100;
+
+        // Apply Scale
         if (layer.threeDLayer) {
-            layer.transform.scale.setValue([scale, scale, 100]);
+            layer.transform.scale.setValue([finalScale, finalScale, 100]);
         } else {
-            layer.transform.scale.setValue([scale, scale]);
+            layer.transform.scale.setValue([finalScale, finalScale]);
         }
 
-        // Center layer
+        // Optional: Also center it (standard behavior for Fit/Fill commands)
         if (layer.threeDLayer) {
             layer.transform.position.setValue([comp.width / 2, comp.height / 2, 0]);
         } else {
@@ -497,6 +497,30 @@ function fitToComp() {
         }
     }
 
+    app.endUndoGroup();
+}
+
+// [ADD THIS NEW FUNCTION to the bottom of host.jsx]
+
+function centerLayer() {
+    app.beginUndoGroup("Sniprr Center");
+    var comp = app.project.activeItem;
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            if (layer.locked) continue;
+
+            // Handle 2D vs 3D Position
+            if (layer.threeDLayer) {
+                // Keep existing Z position, reset X and Y
+                var currentPos = layer.transform.position.value;
+                layer.transform.position.setValue([comp.width / 2, comp.height / 2, currentPos[2]]);
+            } else {
+                layer.transform.position.setValue([comp.width / 2, comp.height / 2]);
+            }
+        }
+    }
     app.endUndoGroup();
 }
 

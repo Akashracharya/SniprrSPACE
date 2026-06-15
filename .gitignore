@@ -20,6 +20,7 @@ assets/**/*.mp3
 assets/**/*.wav
 assets/**/*.aiff
 assets/**/*.m4a
+assets/**/*.aac
 
 # Video
 assets/**/*.mp4
@@ -27,11 +28,10 @@ assets/**/*.mov
 assets/**/*.avi
 assets/**/*.m4v
 
-
-
 # Images
 assets/**/*.jpg
 assets/**/*.jpeg
+assets/**/*.png
 
 # After Effects Specific
 assets/**/*.ffx

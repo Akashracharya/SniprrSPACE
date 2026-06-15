@@ -1,0 +1,928 @@
+// 1. IMPORT MEDIA
+function importFile(filePath) {
+    app.beginUndoGroup("SniprrSPACE Import");
+    try {
+        var comp = app.project.activeItem;
+        if (!comp || !(comp instanceof CompItem)) {
+            alert("Please select a Composition.");
+            return;
+        }
+
+        // Check for selected layer to place above
+        var targetLayer = (comp.selectedLayers.length > 0) ? comp.selectedLayers[0] : null;
+
+        var io = new ImportOptions(new File(filePath));
+        var importedItem = app.project.importFile(io);
+
+        var layer = comp.layers.add(importedItem);
+
+        // 1. Set Start Time
+        // If a layer is selected, match its start time? Or stick to CTI?
+        // Usually imports go to CTI (Current Time Indicator).
+        layer.startTime = comp.time;
+
+        // 2. Place Above Selected Layer
+        if (targetLayer) {
+            layer.moveBefore(targetLayer);
+        }
+
+        // Auto-label colors
+        if (filePath.match(/\.(mp3|wav|aiff)$/i)) layer.label = 11; // Orange for SFX
+        else layer.label = 9; // Blue for video
+
+    } catch (err) {
+        // alert(err.toString());
+    }
+    app.endUndoGroup();
+}
+
+// 7. STRICT APPLY PRESET (Fixed: No .trim() error)
+// 8. FINAL ROBUST APPLY PRESET (Decodes URI + Flexible Tagging)
+// 16. FINAL HOST.JSX (Includes [direct] support)
+function applyPreset(presetPath) {
+    app.beginUndoGroup("Sniprr Apply Preset");
+
+    try {
+        var comp = app.project.activeItem;
+
+        // --- CHECKS ---
+        if (!comp || !(comp instanceof CompItem)) {
+            alert("SniprrError: No Composition Active.");
+            return;
+        }
+
+        // 1. ANALYZE FILE NAME
+        var presetFile = new File(presetPath);
+        if (!presetFile.exists) {
+            presetFile = new File(decodeURIComponent(presetPath));
+            if (!presetFile.exists) {
+                alert("File not found: " + presetPath);
+                return;
+            }
+        }
+
+        var decodedName = decodeURIComponent(presetFile.name);
+        var nameLower = decodedName.toLowerCase();
+
+        // Create Clean Name (No tags) for new layers
+        var layerName = decodedName
+            .replace(/\.ffx$/i, "")         // Remove extension
+            .replace(/\[.*?\]/g, "")        // Remove [tags]
+            .replace(/\s+/g, " ")           // Collapse spaces
+            .replace(/^\s+|\s+$/g, '');     // Trim
+
+        // --- 2. PARSE TAGS ---
+        var isDirect = /\[\s*direct\s*\]/i.test(nameLower); // NEW: [direct]
+        var isFull   = /\[\s*full\s*\]/i.test(nameLower);
+        var isNull   = /\[\s*null\s*\]/i.test(nameLower);
+        var isSolid  = /\[\s*(s|sol|solid|white|flash)\s*\]/i.test(nameLower);
+        var isBlack  = /\[\s*(black|shadow)\s*\]/i.test(nameLower);
+        var isCentered = /\[\s*(c|center|trans)\s*\]/i.test(nameLower);
+
+        var customDuration = null;
+        var durationMatch = nameLower.match(/\[\s*(\d+)\s*(f|s)\s*\]/i);
+
+        if (durationMatch) {
+            var val = parseInt(durationMatch[1], 10);
+            var unit = durationMatch[2];
+            if (unit === 's') customDuration = val;
+            else if (unit === 'f') customDuration = val * comp.frameDuration;
+        }
+
+        // --- 3. CHECK SELECTION ---
+        var targets = comp.selectedLayers;
+        var runGlobal = false;
+
+        if (targets.length === 0) {
+            // Logic: [direct] MUST have a selection. 
+            // Only [full] WITHOUT [direct] can run globally.
+            if (isFull && !isDirect) {
+                runGlobal = true; 
+            } else {
+                alert("SniprrError: No Layer Selected.\nPlease select a layer.");
+                return; 
+            }
+        }
+
+        var loopCount = runGlobal ? 1 : targets.length;
+
+        // --- 4. EXECUTE ---
+        for (var i = 0; i < loopCount; i++) {
+            
+            var targetLayer = runGlobal ? null : targets[i];
+            var newLayer;
+
+            // A. Timing Logic
+            var finalDuration = 0;
+            var startTime = 0;
+
+            if (isFull) {
+                startTime = 0;
+                finalDuration = comp.duration;
+            } 
+            else {
+                // If Direct, we default to layer start, but we won't trim it later
+                if (customDuration !== null) finalDuration = customDuration;
+                else {
+                    finalDuration = targetLayer ? (targetLayer.outPoint - targetLayer.inPoint) : comp.duration;
+                    if (isCentered) finalDuration = 1.0;
+                }
+                
+                if (targetLayer) {
+                     if (isCentered) startTime = targetLayer.inPoint - (finalDuration / 2);
+                     else startTime = targetLayer.inPoint;
+                }
+            }
+
+            // Move CTI (Crucial for keyframes)
+            comp.time = startTime;
+
+            // B. Layer Creation Logic
+            if (isDirect) {
+                // [DIRECT MODE]: Apply to the existing layer
+                if (!targetLayer) continue; // Safety check
+                newLayer = targetLayer;
+            } 
+            else {
+                // [NORMAL MODE]: Create a new container layer
+                if (isNull) {
+                    newLayer = comp.layers.addNull();
+                    newLayer.label = 1;
+                }
+                else if (isSolid) {
+                    newLayer = comp.layers.addSolid([1, 1, 1], layerName, comp.width, comp.height, comp.pixelAspect);
+                    newLayer.label = 5;
+                }
+                else if (isBlack) {
+                    newLayer = comp.layers.addSolid([0, 0, 0], layerName, comp.width, comp.height, comp.pixelAspect);
+                    newLayer.label = 15;
+                }
+                else {
+                    // Default: Adjustment Layer
+                    newLayer = comp.layers.addSolid([1, 1, 1], layerName, comp.width, comp.height, comp.pixelAspect);
+                    newLayer.adjustmentLayer = true;
+                    newLayer.label = 8;
+                }
+
+                // Place above target
+                if (targetLayer) newLayer.moveBefore(targetLayer);
+                else newLayer.moveToBeginning();
+            }
+
+            // C. Apply Preset
+            try { newLayer.applyPreset(presetFile); } catch (e) { }
+
+            // D. Force Properties (ONLY for new layers)
+            // If [direct], we leave the layer name and duration alone
+            if (!isDirect) {
+                newLayer.name = layerName;
+                newLayer.inPoint = startTime;
+                newLayer.outPoint = startTime + finalDuration;
+            }
+        }
+
+    } catch (err) {
+        alert("Error: " + err.toString());
+    }
+
+    app.endUndoGroup();
+}
+
+// [APPEND TO BOTTOM OF host.jsx]
+
+// [REPLACE THE PREVIOUS saveSnapshot FUNCTION WITH THIS]
+
+// [REPLACE saveSnapshot WITH THESE TWO FUNCTIONS]
+
+// PHASE 1: SAVE ONLY
+function saveSnapshot(folderPath) {
+    app.beginUndoGroup("Sniprr Snapshot Save");
+    var savedPath = ""; // We will return this path to JS
+    
+    try {
+        // --- ROBUST COMP FINDER (Fixes the "Layer Selection" bug) ---
+        var comp = app.project.activeItem;
+        if (!comp || !(comp instanceof CompItem)) {
+            // If Project Panel is focused, check the Active Viewer
+            if (app.activeViewer && app.activeViewer.activeComp) {
+                comp = app.activeViewer.activeComp;
+            }
+        }
+        
+        if (!comp || !(comp instanceof CompItem)) {
+            return "ERROR: No Composition found. Click inside the Timeline.";
+        }
+
+        // --- SAVE LOGIC ---
+        var f = new Folder(folderPath);
+        if (!f.exists) return "ERROR: Folder not found.";
+
+        function pad(n, width) { return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n; }
+        
+        // Create unique name
+        var safeName = comp.name.replace(/[^a-z0-9]/gi, '_').toLowerCase().substr(0, 20);
+        var frame = Math.round(comp.time / comp.frameDuration);
+        var timestamp = new Date().getTime().toString().slice(-5);
+        var fileName = safeName + "_" + pad(frame + "", 5) + "_" + timestamp + ".png";
+        
+        var fileObj = new File(f.fsName + "/" + fileName);
+        
+        // Save
+        comp.saveFrameToPng(comp.time, fileObj);
+        savedPath = fileObj.fsName;
+
+    } catch (err) {
+        return "ERROR: " + err.toString();
+    }
+    app.endUndoGroup();
+    
+    return savedPath; // Send path back to JavaScript
+}
+
+// PHASE 2: IMPORT ONLY
+function importSnapshot(filePath) {
+    app.beginUndoGroup("Sniprr Snapshot Import");
+    try {
+        var fileObj = new File(filePath);
+        
+        if (fileObj.exists) {
+            var io = new ImportOptions(fileObj);
+            io.sequence = false;
+            var importedItem = app.project.importFile(io);
+            importedItem.selected = true; // Highlight it
+        } else {
+            alert("Import Failed: File system was too slow.\nTry increasing the timer.");
+        }
+    } catch(err) {
+        // alert("Import Error: " + err.toString());
+    }
+    app.endUndoGroup();
+}
+
+
+// 3. CREATE LAYER (Updated with Shift+Null Parenting)
+function createLayer(type, colorHex, userLabel, doParent) {
+    app.beginUndoGroup("Sniprr Create " + type);
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) {
+        app.endUndoGroup();
+        return;
+    }
+
+    // Capture all selected layers BEFORE we create the new one (which deselects everything)
+    // Capture all selected layers BEFORE we create the new one (which deselects everything)
+    var originalSelection = [];
+    for (var s = 0; s < comp.selectedLayers.length; s++) {
+        originalSelection.push(comp.selectedLayers[s]);
+    }
+    
+    // Find the physically highest layer in the timeline stack (lowest index)
+    var target = null;
+    if (originalSelection.length > 0) {
+        var highestIndex = 999999;
+        for (var k = 0; k < originalSelection.length; k++) {
+            if (originalSelection[k].index < highestIndex) {
+                highestIndex = originalSelection[k].index;
+                target = originalSelection[k];
+            }
+        }
+    }
+
+    // 1. Determine Dimensions & Time
+    var w = comp.width;
+    var h = comp.height;
+    var pa = comp.pixelAspect;
+    var duration = comp.duration;
+    var startT = (target) ? target.inPoint : comp.time;
+    if (target) duration = target.outPoint - target.inPoint;
+
+    // 2. Resolve Name
+    var finalName = userLabel;
+    if (!finalName || finalName === "") {
+        if (type === 'adjustment') finalName = "Adjustment Layer";
+        else if (type === 'solid') finalName = "Solid";
+        else if (type === 'camera') finalName = "Camera";
+        else if (type === 'text') finalName = "Text";
+        else if (type === 'null') finalName = "Null";
+        else finalName = "Layer";
+    }
+
+    // 3. Resolve Color
+    var col = [0.5, 0.5, 0.5];
+    if (colorHex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(colorHex);
+        if (result) col = [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
+    }
+
+    var newLayer = null;
+    try {
+        switch (type) {
+            case 'adjustment':
+                newLayer = comp.layers.addSolid([1, 1, 1], finalName, w, h, pa, duration);
+                newLayer.adjustmentLayer = true;
+                newLayer.label = 5;
+                break;
+            case 'solid':
+                newLayer = comp.layers.addSolid(col, finalName, w, h, pa, duration);
+                break;
+            case 'null':
+                newLayer = comp.layers.addNull();
+                break;
+            case 'camera':
+                var countBefore = comp.numLayers;
+                app.executeCommand(app.findMenuCommandId("Camera..."));
+                if (comp.numLayers > countBefore) {
+                    newLayer = comp.selectedLayers[0];
+                    if (userLabel && userLabel !== "") {
+                        newLayer.name = finalName;
+                    }
+                    finalName = newLayer.name;
+                }
+                break;
+            case 'text':
+                newLayer = comp.layers.addText(finalName);
+                break;
+        }
+
+        if (newLayer) {
+            newLayer.name = finalName;
+
+            // Match Timing / Position
+            if (target) {
+                newLayer.startTime = target.startTime;
+                newLayer.inPoint = target.inPoint;
+                newLayer.outPoint = target.outPoint;
+                newLayer.moveBefore(target);
+            } else {
+                newLayer.startTime = startT;
+            }
+            
+            // --- NEW PARENTING LOGIC ---
+            var shouldParent = (doParent === true || doParent === "true");
+            
+            if (type === 'null' && shouldParent && originalSelection.length > 0) {
+                // Loop through all the layers you had selected and link them to the Null
+                for (var i = 0; i < originalSelection.length; i++) {
+                    originalSelection[i].parent = newLayer;
+                }
+            }
+        }
+    } catch (err) { 
+        alert(err.toString()); 
+    }
+    app.endUndoGroup();
+}
+
+
+// 4. PRE-COMPOSE (Fixed: Explicit Renaming)
+function doPrecompose(individual, userLabel) {
+    app.beginUndoGroup("Sniprr Pre-compose");
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem) || comp.selectedLayers.length === 0) {
+        app.endUndoGroup();
+        return;
+    }
+
+    var sel = comp.selectedLayers;
+
+    function trimPrecomp(compItem, newLayer, minIn, duration) {
+        compItem.duration = duration;
+        for (var i = 1; i <= compItem.numLayers; i++) {
+            var layer = compItem.layer(i);
+            layer.startTime -= minIn;
+        }
+        newLayer.startTime = minIn;
+        newLayer.inPoint = minIn;
+        newLayer.outPoint = minIn + duration;
+    }
+
+    if (individual) {
+        // Individual Mode
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            var idx = layer.index;
+            var inP = layer.inPoint;
+            var outP = layer.outPoint;
+            var dur = outP - inP;
+
+            // Generate Name
+            var baseName = (userLabel && userLabel !== "") ? userLabel : layer.name;
+            var finalName = baseName + " Comp " + (i + 1);
+
+            var newComp = comp.layers.precompose([idx], finalName, true);
+            var newLayer = comp.selectedLayers[0]; // The new precomp layer
+
+            // Rename the Layer inside the main comp
+            if (userLabel && userLabel !== "") newLayer.name = userLabel + " " + (i + 1);
+
+            trimPrecomp(newComp, newLayer, inP, dur);
+        }
+
+    } else {
+        // Group Mode
+        var indices = [];
+        var minIn = 999999;
+        var maxOut = -999999;
+
+        for (var i = 0; i < sel.length; i++) {
+            indices.push(sel[i].index);
+            if (sel[i].inPoint < minIn) minIn = sel[i].inPoint;
+            if (sel[i].outPoint > maxOut) maxOut = sel[i].outPoint;
+        }
+
+        var dur = maxOut - minIn;
+        var pName = (userLabel && userLabel !== "") ? userLabel : "Pre-comp";
+
+        var newComp = comp.layers.precompose(indices, pName, true);
+        var newLayer = comp.selectedLayers[0];
+
+        // Rename the Layer explicitly
+        if (userLabel && userLabel !== "") newLayer.name = userLabel;
+
+        trimPrecomp(newComp, newLayer, minIn, dur);
+    }
+    app.endUndoGroup();
+}
+
+// 5. FRAME BLENDING (Fixed)
+
+
+// 6. FIT TO COMP (Fixed: No Shrink, Maintain Aspect)
+// [REPLACE the existing fitToComp function with this updated version]
+
+// 6. FIT TO COMP (Updated: FILL COMP logic)
+// Scales the layer to completely cover the composition (no black bars)
+function fitToComp() {
+    app.beginUndoGroup("Sniprr Fit Fill");
+
+    var comp = app.project.activeItem;
+    if (!(comp && comp instanceof CompItem)) {
+        app.endUndoGroup();
+        return;
+    }
+
+    var sel = comp.selectedLayers;
+    if (sel.length === 0) {
+        app.endUndoGroup();
+        return;
+    }
+
+    var t = comp.time;
+
+    for (var i = 0; i < sel.length; i++) {
+        var layer = sel[i];
+        if (layer.locked) continue;
+        if (layer instanceof CameraLayer || layer instanceof LightLayer) continue;
+
+        // Reset scale to 100 to get accurate source dimensions
+        var currentScale = layer.transform.scale.value;
+        layer.transform.scale.setValue(layer.threeDLayer ? [100, 100, 100] : [100, 100]);
+
+        var rect = layer.sourceRectAtTime(t, false);
+        
+        // Safety check for empty layers
+        if (!rect || rect.width === 0 || rect.height === 0) {
+            // Restore previous scale if we can't calculate
+            layer.transform.scale.setValue(currentScale);
+            continue;
+        }
+
+        // Calculate Scale needed for Width and Height
+        var scaleX = comp.width / rect.width;
+        var scaleY = comp.height / rect.height;
+
+        // FILL LOGIC: Choose the LARGER scale factor to ensure coverage
+        var finalScale = Math.max(scaleX, scaleY) * 100;
+
+        // Apply Scale
+        if (layer.threeDLayer) {
+            layer.transform.scale.setValue([finalScale, finalScale, 100]);
+        } else {
+            layer.transform.scale.setValue([finalScale, finalScale]);
+        }
+
+        // Optional: Also center it (standard behavior for Fit/Fill commands)
+        if (layer.threeDLayer) {
+            layer.transform.position.setValue([comp.width / 2, comp.height / 2, 0]);
+        } else {
+            layer.transform.position.setValue([comp.width / 2, comp.height / 2]);
+        }
+    }
+
+    app.endUndoGroup();
+}
+
+// [ADD THIS NEW FUNCTION to the bottom of host.jsx]
+
+function centerLayer() {
+    app.beginUndoGroup("Sniprr Center");
+    var comp = app.project.activeItem;
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            if (layer.locked) continue;
+
+            // Handle 2D vs 3D Position
+            if (layer.threeDLayer) {
+                // Keep existing Z position, reset X and Y
+                var currentPos = layer.transform.position.value;
+                layer.transform.position.setValue([comp.width / 2, comp.height / 2, currentPos[2]]);
+            } else {
+                layer.transform.position.setValue([comp.width / 2, comp.height / 2]);
+            }
+        }
+    }
+    app.endUndoGroup();
+}
+
+
+// [APPEND TO BOTTOM OF host.jsx]
+
+// HUE: Adds "Hue/Saturation" effect to selected layers
+function applyHueSaturation() {
+    app.beginUndoGroup("Sniprr Add Hue/Sat");
+    var comp = app.project.activeItem;
+    
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            
+            // Skip locked layers
+            if (layer.locked) continue;
+
+            try {
+                // Check if layer can hold effects (Cameras/Lights usually can't)
+                if (layer.property("Effects")) {
+                    // "ADBE HUE SATURATION" is the universal match name
+                    layer.property("Effects").addProperty("ADBE HUE SATURATION");
+                }
+            } catch (err) {
+                // Ignore layers that don't accept effects
+            }
+        }
+    }
+    app.endUndoGroup();
+}
+
+// 7. ANCHOR POINT (Fixed: Robust 2D/3D Math)
+// [PARTIAL UPDATE - Replace the existing setAnchorPoint function]
+
+// 7. ANCHOR POINT (Standard 1-9 Grid Logic)
+// 1 2 3
+// 4 5 6
+// 7 8 9
+function setAnchorPoint(posIndex) {
+    app.beginUndoGroup("Sniprr Anchor");
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) return;
+    var sel = comp.selectedLayers;
+
+    for (var n = 0; n < sel.length; n++) {
+        var layer = sel[n];
+        var rect = layer.sourceRectAtTime(comp.time, false);
+
+        // 1. Calculate Target X
+        var newX = rect.left;
+        if (posIndex === 2 || posIndex === 5 || posIndex === 8) newX += rect.width / 2; // Center Cols
+        if (posIndex === 3 || posIndex === 6 || posIndex === 9) newX += rect.width;     // Right Cols
+
+        // 2. Calculate Target Y
+        var newY = rect.top;
+        if (posIndex === 4 || posIndex === 5 || posIndex === 6) newY += rect.height / 2; // Middle Rows
+        if (posIndex === 7 || posIndex === 8 || posIndex === 9) newY += rect.height;     // Bottom Rows
+
+        var newAnchor = [newX, newY, 0];
+
+        // 3. Compensation Math (Keep Layer in Visual Place)
+        var curAnchor = layer.transform.anchorPoint.value;
+        var delta = [newAnchor[0] - curAnchor[0], newAnchor[1] - curAnchor[1]];
+
+        var curScale = layer.transform.scale.value;
+        var curRot = layer.transform.rotation.value;
+
+        // Convert Scale % to decimal factor
+        var sX = curScale[0] / 100;
+        var sY = curScale[1] / 100;
+
+        // Apply Rotation
+        var rad = curRot * (Math.PI / 180);
+        var cos = Math.cos(rad);
+        var sin = Math.sin(rad);
+
+        // Rotate the delta offset
+        var dX = delta[0] * sX;
+        var dY = delta[1] * sY;
+
+        var rotDX = (dX * cos) - (dY * sin);
+        var rotDY = (dX * sin) + (dY * cos);
+
+        var curPos = layer.transform.position.value;
+
+        // Apply values
+        if (layer.threeDLayer) {
+            layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1], curAnchor[2]]);
+            layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY, curPos[2]]);
+        } else {
+            layer.transform.anchorPoint.setValue([newAnchor[0], newAnchor[1]]);
+            layer.transform.position.setValue([curPos[0] + rotDX, curPos[1] + rotDY]);
+        }
+    }
+    app.endUndoGroup();
+}
+// [APPEND TO BOTTOM OF host.jsx]
+
+// 11. MOVE LAYER IN/OUT (INP / OUTP Buttons)
+function moveLayerPoint(type) {
+    app.beginUndoGroup("Sniprr Move " + type);
+    var comp = app.project.activeItem;
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        var t = comp.time;
+
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+
+            if (type === 'in') {
+                // Calculate difference between current InPoint and CTI
+                var offset = t - layer.inPoint;
+                // Move the layer by that amount
+                layer.startTime += offset;
+            }
+            else if (type === 'out') {
+                // Calculate difference between current OutPoint and CTI
+                var offset = t - layer.outPoint;
+                layer.startTime += offset;
+            }
+        }
+    }
+    app.endUndoGroup();
+}
+
+// 8. MOVE CTI (Frames)
+function moveCTI(deltaFrames) {
+    var comp = app.project.activeItem;
+    if (comp && comp instanceof CompItem) {
+        // Move Current Time Indicator
+        comp.time += deltaFrames * comp.frameDuration;
+    }
+}
+
+// 9. DELETE LAYERS
+function deleteSelectedLayers() {
+    app.beginUndoGroup("Sniprr Delete");
+    var comp = app.project.activeItem;
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        for (var i = 0; i < sel.length; i++) {
+            sel[i].remove();
+        }
+    }
+    app.endUndoGroup();
+}
+
+
+function trimSelectedLayers(side) {
+    app.beginUndoGroup("Sniprr Trim " + side);
+    var comp = app.project.activeItem;
+    if (comp && comp.selectedLayers.length > 0) {
+        var sel = comp.selectedLayers;
+        var t = comp.time;
+
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+
+            try {
+                // TRIM LEFT ( [ ) -> Sets In Point
+                // Goal: Layer starts at CTI.
+                // Condition: CTI must be BEFORE the current Out Point.
+                if (side === 'left') {
+                    if (t < layer.outPoint) {
+                        layer.inPoint = t;
+                    }
+                }
+                // TRIM RIGHT ( ] ) -> Sets Out Point
+                // Goal: Layer ends at CTI.
+                // Condition: CTI must be AFTER the current In Point.
+                else if (side === 'right') {
+                    if (t > layer.inPoint) {
+                        layer.outPoint = t;
+                    }
+                }
+            } catch (e) {
+                // Ignore errors (prevents crash if layer is locked/invalid)
+            }
+        }
+    }
+    app.endUndoGroup();
+}
+// 5. BLENDING MODE
+function setBlendingMode(modeName) {
+    app.beginUndoGroup("Sniprr Blend Mode");
+    try {
+        var comp = app.project.activeItem;
+        if (comp && comp.selectedLayers.length > 0) {
+            var sel = comp.selectedLayers;
+            for (var i = 0; i < sel.length; i++) {
+                if (modeName === "ADD") sel[i].blendingMode = BlendingMode.ADD;
+                // You can add other modes here later (e.g., SCREEN, OVERLAY)
+            }
+        }
+    } catch (err) { alert(err.toString()); }
+    app.endUndoGroup();
+}
+
+// [APPEND TO BOTTOM OF host.jsx]
+
+function unPrecompose() {
+    app.beginUndoGroup("Sniprr Un-Precompose");
+    
+    var comp = app.project.activeItem;
+    if (!(comp instanceof CompItem) || comp.selectedLayers.length !== 1) {
+        alert("Please select exactly one Pre-comp layer to un-precompose.");
+        app.endUndoGroup();
+        return;
+    }
+
+    var layer = comp.selectedLayers[0];
+    
+    // Verify it is a pre-comp
+    if (layer.source === null || !(layer.source instanceof CompItem)) {
+        alert("Selected layer is not a Pre-composition.");
+        app.endUndoGroup();
+        return;
+    }
+
+    var precomp = layer.source;
+    var startTimeOffset = layer.startTime;
+    var layerIndex = layer.index;
+
+    // 1. Open Precomp and Copy Layers
+    precomp.openInViewer();
+    var preLayers = precomp.layers;
+    
+    if (preLayers.length === 0) {
+        // Empty comp, just delete the layer in main?
+        comp.openInViewer();
+        layer.remove();
+        app.endUndoGroup();
+        return;
+    }
+
+    // Select all layers inside precomp
+    for (var i = 1; i <= preLayers.length; i++) {
+        preLayers[i].selected = true;
+    }
+    
+    // Copy to clipboard
+    app.executeCommand(app.findMenuCommandId("Copy"));
+    
+    // Deselect to be clean
+    for (var i = 1; i <= preLayers.length; i++) {
+        preLayers[i].selected = false;
+    }
+
+    // 2. Paste in Main Comp
+    comp.openInViewer(); // Switch back to main comp
+    layer.selected = false; // Deselect the precomp layer so we don't paste *into* it or replace it depending on prefs
+
+    app.executeCommand(app.findMenuCommandId("Paste"));
+
+    // 3. Retime and Move Pasted Layers
+    var pastedLayers = comp.selectedLayers;
+    
+    // We iterate backwards to maintain relative order when moving
+    for (var i = 0; i < pastedLayers.length; i++) {
+        var pLayer = pastedLayers[i];
+        
+        // Offset time by the Pre-comp's start time
+        pLayer.startTime += startTimeOffset;
+        
+        // Move to the index where the Pre-comp was
+        pLayer.moveBefore(layer);
+    }
+    
+    // 4. Remove original Pre-comp layer
+    layer.remove();
+
+    app.endUndoGroup();
+}
+
+function importPastedImage(filePath, isShift) {
+    // Convert the string passed from JS into a real boolean
+    var placeOnTimeline = (isShift === true || isShift === "true");
+
+    app.beginUndoGroup("Paste Image");
+    try {
+        var fileToImport = new File(filePath);
+        if (!fileToImport.exists) {
+            alert("Could not locate the pasted file.");
+            return;
+        }
+
+        // 1. Import into Project Panel
+        var importOptions = new ImportOptions(fileToImport);
+        var importedItem = app.project.importFile(importOptions);
+
+        // 2. If Shift was held, add to current timeline
+        if (placeOnTimeline && app.project.activeItem && app.project.activeItem instanceof CompItem) {
+            var comp = app.project.activeItem;
+            var selectedLayers = comp.selectedLayers;
+            
+            // Add the image to the composition
+            var newLayer = comp.layers.add(importedItem);
+
+            // Move the start point of the image to the CTI (Playhead)
+            newLayer.startTime = comp.time;
+
+            // If a layer is selected, place the new image exactly ABOVE it
+            if (selectedLayers.length > 0) {
+                newLayer.moveBefore(selectedLayers[0]);
+            }
+        }
+    } catch (e) {
+        alert("Error pasting image to After Effects: " + e.toString());
+    }
+    app.endUndoGroup();
+}
+
+function applyExpression(exprType) {
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) {
+        alert("Please select a composition.");
+        return;
+    }
+
+    var layers = comp.selectedLayers;
+    if (layers.length === 0) {
+        alert("Please select a layer and highlight a property (e.g., Scale, Position).");
+        return;
+    }
+
+    // Define the expression strings
+    var exprString = "";
+    
+    if (exprType === "bounce") {
+        // The famous Elastic/Inertial Bounce expression!
+        exprString = "amp = .1;\n" +
+                     "freq = 2.0;\n" +
+                     "decay = 2.0;\n" +
+                     "n = 0;\n" +
+                     "if (numKeys > 0){\n" +
+                     "  n = nearestKey(time).index;\n" +
+                     "  if (key(n).time > time){n--;}\n" +
+                     "}\n" +
+                     "if (n == 0){ t = 0; }else{ t = time - key(n).time; }\n" +
+                     "if (n > 0 && t < 1){\n" +
+                     "  v = velocityAtTime(key(n).time - thisComp.frameDuration/10);\n" +
+                     "  value + v*amp*Math.sin(freq*t*2*Math.PI)/Math.exp(decay*t);\n" +
+                     "}else{ value; }";
+    } 
+    else if (exprType === "wiggle") {
+        exprString = "wiggle(2, 20);";
+    } 
+    else if (exprType === "loop") {
+        exprString = "loopOut('cycle');";
+    } 
+    else if (exprType === "spin") {
+        exprString = "time * 150;";
+    } 
+    else if (exprType === "timer") {
+        // Creates a highly accurate 00:00:00 (Mins:Secs:MS) stopwatch that starts exactly where the layer begins
+        exprString = "var t = Math.max(0, time - inPoint);\n" +
+                     "var mins = Math.floor(t / 60);\n" +
+                     "var secs = Math.floor(t % 60);\n" +
+                     "var ms = Math.floor((t % 1) * 100);\n" +
+                     "function pad(n) { return n < 10 ? '0' + n : n; }\n" +
+                     "pad(mins) + ':' + pad(secs) + ':' + pad(ms);";
+    }
+
+    app.beginUndoGroup("Apply Expression: " + exprType);
+    var appliedCount = 0;
+
+    // Loop through all selected layers and their highlighted properties
+    for (var i = 0; i < layers.length; i++) {
+        var props = layers[i].selectedProperties;
+        
+        for (var j = 0; j < props.length; j++) {
+            // Check if the property is actually allowed to have an expression
+            if (props[j].canSetExpression) {
+                props[j].expression = exprString;
+                appliedCount++;
+            }
+        }
+    }
+
+    // If the user selected a layer but didn't actually highlight a property
+    if (appliedCount === 0) {
+        alert("Please select a specific property (like Position, Scale, or Rotation) in the timeline to apply this expression to.");
+    }
+    
+    app.endUndoGroup();
+}
+
+
+// PURGE ALL MEMORY & DISK CACHE
+// PURGE ALL MEMORY & DISK CACHE
+// PURGE ALL MEMORY & DISK CACHE (NATIVE ADOBE DIALOG)

@@ -1868,3 +1868,108 @@ button:focus,
     background: #333333;
     color: #ffffff;
 }
+
+/* =========================================
+   RAM MONITOR & PURGE MENU
+   ========================================= */
+
+.ram-monitor {
+    position: fixed;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(25, 25, 25, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 20px; /* Pill shape */
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 500;
+    color: #cccccc;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.ram-monitor:hover {
+    background: rgba(40, 40, 40, 0.9);
+    color: #ffffff;
+    border-color: rgba(168, 85, 247, 0.6); /* Purple hover outline */
+}
+
+/* The little glowing LED dot */
+.ram-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80; /* Defaults to Green */
+    box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
+    transition: all 0.3s ease;
+}
+
+/* The Glassmorphic Menu */
+.purge-menu {
+    position: fixed;
+    top: 34px; /* Drops right below the RAM pill */
+    left: 50%;
+    width: 140px;
+    background: rgba(30, 30, 30, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 9999;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    
+    /* Animation styling */
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.purge-menu.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) scale(0.9); /* Shrinks up when closed */
+}
+
+.purge-title {
+    margin: 0;
+    font-size: 9px;
+    color: #888888;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    user-select: none;
+}
+
+/* Purge Button */
+.purge-btn {
+    background: rgba(220, 38, 38, 0.15); /* Transparent Red */
+    border: 1px solid rgba(220, 38, 38, 0.4);
+    color: #fca5a5; /* Soft Red text */
+    border-radius: 4px;
+    padding: 6px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.purge-btn:hover {
+    background: rgba(220, 38, 38, 0.4);
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.3); /* Red glow */
+}

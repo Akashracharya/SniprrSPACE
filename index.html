@@ -13,6 +13,23 @@
         <header class="top-bar">
             <img src="assets/main.png" class="app-logo" alt="SniprrSPACE">
 
+            <div class="ram-monitor" id="ramMonitorBtn" onclick="togglePurgeMenu(event)" title="Memory Management">
+                <span class="ram-dot" id="ramDot"></span>
+                <span id="ramText">-- GB</span>
+            </div>
+
+            <div class="purge-menu hidden" id="purgeMenu">
+                <p class="purge-title">System Memory</p>
+                <button class="purge-btn" id="purgeBtn" onclick="executePurge()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Purge All Caches
+                </button>
+            </div>
+
             <div class="top-action-dock">
                 <button class="mini-btn" id="btnSnap"
                     title="Click: Save Snapshot&#10;Shift+Click: Change Folder">SNAP</button>

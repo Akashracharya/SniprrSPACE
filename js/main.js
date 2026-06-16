@@ -54,6 +54,14 @@ function setupTabs() {
     const navBar = document.getElementById('bottomNavBar');
     const glider = document.getElementById('tabGlider');
     
+
+    const updateGliderPosition = () => {
+        const activeTab = document.querySelector('.tab-btn.active');
+        if (activeTab && glider) {
+            glider.style.width = activeTab.offsetWidth + 'px';
+            glider.style.left = activeTab.offsetLeft + 'px';
+        }
+    };
     // Helper to switch tab visually instantly, but delay loading data
     const activateTab = (index) => {
         const tab = tabs[index];
@@ -111,13 +119,10 @@ function setupTabs() {
     }
 
     // Init Glider Position
-    setTimeout(() => {
-        const active = document.querySelector('.tab-btn.active');
-        if (active && glider) {
-            glider.style.width = active.offsetWidth + 'px';
-            glider.style.left = active.offsetLeft + 'px';
-        }
-    }, 100);
+    window.addEventListener('resize', updateGliderPosition);
+
+    // Init Glider Position
+    setTimeout(updateGliderPosition, 100);
 }
 
 
@@ -798,6 +803,90 @@ window.triggerAnchor = function(clickedBtn, posIndex) {
         clickedBtn.classList.add('active');
     }
 };
+// =========================================
+// RAM MONITOR & PURGE LOGIC
+// =========================================
 
+// 1. Fetch and update the RAM usage in the UI
+function updateRAM() {
+    const csInterface = new CSInterface();
+    csInterface.evalScript('getSniprrRAM()', function(result) {
+        const ramText = document.getElementById('ramText');
+        const ramDot = document.getElementById('ramDot');
+        
+        // Make sure we didn't get an error back from AE
+        if (result && result !== "Error") {
+            ramText.innerText = result + ' GB';
+            
+            // Convert string to a number to calculate color thresholds
+            const ramVal = parseFloat(result);
+            
+            // Change dot color based on how much RAM is used
+            if (ramVal > 15.0) {
+                // High Memory - Red
+                ramDot.style.background = '#ef4444'; 
+                ramDot.style.boxShadow = '0 0 6px rgba(239, 68, 68, 0.6)';
+            } else if (ramVal > 8.0) {
+                // Medium Memory - Yellow
+                ramDot.style.background = '#eab308'; 
+                ramDot.style.boxShadow = '0 0 6px rgba(234, 179, 8, 0.6)';
+            } else {
+                // Low Memory - Green
+                ramDot.style.background = '#4ade80'; 
+                ramDot.style.boxShadow = '0 0 6px rgba(74, 222, 128, 0.6)';
+            }
+        }
+    });
+}
+
+// Start polling the RAM usage automatically
+setTimeout(updateRAM, 500); // Initial check after half a second
+setInterval(updateRAM, 3000); // Update automatically every 3 seconds
+
+// 2. Toggle the Modal Menu
+function togglePurgeMenu(e) {
+    if(e) e.stopPropagation(); // Prevents the click from triggering the document closer below
+    document.getElementById('purgeMenu').classList.toggle('hidden');
+}
+
+// 3. Execute the Purge Command
+function executePurge() {
+    const btn = document.getElementById('purgeBtn');
+    const originalHTML = btn.innerHTML;
+    const csInterface = new CSInterface();
+    
+    // Set visual loading state
+    btn.innerHTML = 'Purging...';
+    
+    // Talk to After Effects
+    csInterface.evalScript('purgeSniprrRAM()', function(result) {
+        // Tiny timeout so the user has time to read "Purging..."
+        setTimeout(() => {
+            // Restore button text/icon
+            btn.innerHTML = originalHTML;
+            
+            // Close the menu automatically
+            const menu = document.getElementById('purgeMenu');
+            if (menu) menu.classList.add('hidden');
+            
+            // Force an immediate UI update so they see the RAM drop instantly
+            updateRAM();
+            
+        }, 600); 
+    });
+}
+
+// 4. Global Click Listener to close menu when clicking outside
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('purgeMenu');
+    const trigger = document.getElementById('ramMonitorBtn'); 
+    
+    // If the menu is open, and they clicked outside both the menu and the button
+    if (menu && !menu.classList.contains('hidden')) {
+        if (!menu.contains(e.target) && (!trigger || !trigger.contains(e.target))) {
+            menu.classList.add('hidden');
+        }
+    }
+});
 
 init();

@@ -1155,6 +1155,27 @@ function sniprrApplyPresetEase(type) {
     return appliedCount > 0 ? ("SUCCESS:" + appliedCount) : "ERROR: Select keyframes.";
 }
 
-// PURGE ALL MEMORY & DISK CACHE
-// PURGE ALL MEMORY & DISK CACHE
-// PURGE ALL MEMORY & DISK CACHE (NATIVE ADOBE DIALOG)
+
+// --- RAM MONITOR & PURGE LOGIC ---
+
+// Gets current AE Memory usage and converts bytes to Gigabytes (GB)
+// Get current RAM usage from After Effects
+function getSniprrRAM() {
+    try {
+        var bytes = app.memoryInUse;
+        var gb = bytes / (1024 * 1024 * 1024);
+        return gb.toFixed(1); // Returns a string like "4.2"
+    } catch (e) {
+        return "0.0";
+    }
+}
+
+// Empties all Image, Memory, and Disk caches
+function purgeSniprrRAM() {
+    try {
+        app.purge(PurgeTarget.ALL_CACHES);
+        return getSniprrRAM(); // Return the new, lower RAM amount immediately
+    } catch (e) {
+        return "Error";
+    }
+}

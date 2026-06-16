@@ -763,6 +763,10 @@ document.addEventListener('click', (e) => {
 // Send the selected preset to After Effects
 function applyPreset(presetType) {
     const statusText = document.getElementById('epStatus');
+    const menu = document.getElementById('epPresetsMenu');
+    const triggerBtn = document.getElementById('epPresetsTrigger');
+    if (menu) menu.classList.add('hidden');
+    if (triggerBtn) triggerBtn.classList.remove('active');
     
     csInterface.evalScript(`sniprrApplyPresetEase("${presetType}")`, (result) => {
         if (result.startsWith("SUCCESS")) {
@@ -779,5 +783,21 @@ function applyPreset(presetType) {
         }
     });
 }
+// --- ANCHOR GRID LOGIC ---
+window.triggerAnchor = function(clickedBtn, posIndex) {
+    // 1. Send the exact position number to After Effects
+    const csInterface = new CSInterface();
+    csInterface.evalScript(`setAnchorPoint(${parseInt(posIndex)})`);
+    
+    // 2. Clear 'active' styling from all buttons in the grid
+    const allBtns = document.querySelectorAll('.anchor-btn');
+    allBtns.forEach(btn => btn.classList.remove('active'));
+    
+    // 3. Highlight the button you just clicked in Sniprr Purple
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    }
+};
+
 
 init();

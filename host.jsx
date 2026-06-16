@@ -864,24 +864,43 @@ function applyExpression(exprType) {
     var exprString = "";
     
     if (exprType === "bounce") {
-        // The famous Elastic/Inertial Bounce expression!
-        exprString = "amp = .1;\n" +
-                     "freq = 2.0;\n" +
-                     "decay = 2.0;\n" +
+        // Updated expression linking 'amp' to the Slider Control
+        // The try/catch ensures the expression won't break if the user accidentally deletes the slider
+        exprString = "var sens = 1;\n" +
+                     "try { sens = effect('Bounce Sensitivity')('Slider') / 100; } catch(e) {}\n" +
+                     "amp = .04 * sens;\n" +
+                     "freq = 1.8;\n" +
+                     "decay = 3;\n" +
                      "n = 0;\n" +
-                     "if (numKeys > 0){\n" +
+                     "time_max = 3;\n\n" +
+                     "if (numKeys > 0) {\n" +
                      "  n = nearestKey(time).index;\n" +
-                     "  if (key(n).time > time){n--;}\n" +
-                     "}\n" +
-                     "if (n == 0){ t = 0; }else{ t = time - key(n).time; }\n" +
-                     "if (n > 0 && t < 1){\n" +
-                     "  v = velocityAtTime(key(n).time - thisComp.frameDuration/10);\n" +
-                     "  value + v*amp*Math.sin(freq*t*2*Math.PI)/Math.exp(decay*t);\n" +
-                     "}else{ value; }";
+                     "  if (key(n).time > time) {\n" +
+                     "    n--;\n" +
+                     "  }\n" +
+                     "}\n\n" +
+                     "if (n == 0) {\n" +
+                     "  t = 0;\n" +
+                     "} else {\n" +
+                     "  t = time - key(n).time;\n" +
+                     "}\n\n" +
+                     "if (n > 0 && t < time_max) {\n" +
+                     "  v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);\n" +
+                     "  easeFactor = easeOut(t, 0, time_max, 1, 0);\n" +
+                     "  value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t) * easeFactor;\n" +
+                     "} else {\n" +
+                     "  value;\n" +
+                     "}";
     } 
     else if (exprType === "wiggle") {
-        exprString = "wiggle(2, 20);";
-    } 
+        // --- NEW: LINK WIGGLE TO DYNAMIC SLIDER CONTROLS ---
+        exprString = "var freq = 2;\n" +
+                     "var amp = 20;\n" +
+                     "try { freq = effect('Wiggle Frequency')('Slider'); } catch(e) {}\n" +
+                     "try { amp = effect('Wiggle Amplitude')('Slider'); } catch(e) {}\n" +
+                     "wiggle(freq, amp);";
+        groupTitle = "Apply Expression: Wiggle Control";
+    }
     else if (exprType === "loop") {
         exprString = "loopOut('cycle');";
     } 
@@ -889,13 +908,15 @@ function applyExpression(exprType) {
         exprString = "time * 150;";
     } 
     else if (exprType === "timer") {
-        // Creates a highly accurate 00:00:00 (Mins:Secs:MS) stopwatch that starts exactly where the layer begins
-        exprString = "var t = Math.max(0, time - inPoint);\n" +
-                     "var mins = Math.floor(t / 60);\n" +
-                     "var secs = Math.floor(t % 60);\n" +
-                     "var ms = Math.floor((t % 1) * 100);\n" +
-                     "function pad(n) { return n < 10 ? '0' + n : n; }\n" +
-                     "pad(mins) + ':' + pad(secs) + ':' + pad(ms);";
+        // --- UPDATED TEXT COUNTER/TIMER EXPRESSION ---
+        exprString = "var num = 0;\n" +
+                     "try {\n" +
+                     "  num = effect('Timer Value')('Slider');\n" +
+                     "} catch(e) {\n" +
+                     "  num = value;\n" +
+                     "}\n" +
+                     "Math.round(num);";
+        groupTitle = "Apply Expression: Value Counter";
     }
 
     app.beginUndoGroup("Apply Expression: " + exprType);
@@ -903,7 +924,80 @@ function applyExpression(exprType) {
 
     // Loop through all selected layers and their highlighted properties
     for (var i = 0; i < layers.length; i++) {
-        var props = layers[i].selectedProperties;
+        var layer = layers[i];
+        
+        // --- NEW: Add the 'Bounce Sensitivity' Slider Control ---
+        if (exprType === "bounce") {
+            try {
+                if (layer.property("Effects")) {
+                    var sliderName = "Bounce Sensitivity";
+                    var sliderEffect = layer.property("Effects").property(sliderName);
+                    
+                    // Only add the slider if it doesn't already exist on this layer
+                    if (!sliderEffect) {
+                        sliderEffect = layer.property("Effects").addProperty("ADBE Slider Control");
+                        sliderEffect.name = sliderName;
+                        sliderEffect.property("Slider").setValue(100); // Defaults to 100% sensitivity
+                    }
+                }
+            } catch(err) {
+                // Ignore layers that don't accept effects (like Lights/Cameras)
+            }
+        }
+        
+        if (exprType === "wiggle") {
+            try {
+                if (layer.property("Effects")) {
+                    var freqName = "Wiggle Frequency";
+                    var ampName = "Wiggle Amplitude";
+                    
+                    var freqSlider = layer.property("Effects").property(freqName);
+                    if (!freqSlider) {
+                        freqSlider = layer.property("Effects").addProperty("ADBE Slider Control");
+                        freqSlider.name = freqName;
+                        freqSlider.property("Slider").setValue(2); // Maps directly to original frequency
+                    }
+                    
+                    var ampSlider = layer.property("Effects").property(ampName);
+                    if (!ampSlider) {
+                        ampSlider = layer.property("Effects").addProperty("ADBE Slider Control");
+                        ampSlider.name = ampName;
+                        ampSlider.property("Slider").setValue(20); // Maps directly to original amplitude
+                    }
+                }
+            } catch(err) {}
+        }
+
+
+        if (exprType === "timer") {
+            try {
+                if (layer.property("Effects")) {
+                    var timerSliderName = "Timer Value";
+                    var timerSlider = layer.property("Effects").property(timerSliderName);
+                    
+                    if (!timerSlider) {
+                        timerSlider = layer.property("Effects").addProperty("ADBE Slider Control");
+                        timerSlider.name = timerSliderName;
+                        
+                        var sliderProp = timerSlider.property("Slider");
+                        
+                        // Add keyframe at layer's In Point with value 0
+                        var startKeyIndex = sliderProp.addKey(layer.inPoint);
+                        sliderProp.setValueAtKey(startKeyIndex, 0);
+                        
+                        // Add keyframe 2 seconds later with value 100
+                        var endKeyIndex = sliderProp.addKey(layer.inPoint + 2.0);
+                        sliderProp.setValueAtKey(endKeyIndex, 100);
+                    }
+                }
+            } catch(err) {}
+        }
+
+        var props = layer.selectedProperties;
+
+        if (exprType === "timer" && props.length === 0 && layer.property("Source Text")) {
+            props = [layer.property("Source Text")];
+        }
         
         for (var j = 0; j < props.length; j++) {
             // Check if the property is actually allowed to have an expression
@@ -916,12 +1010,150 @@ function applyExpression(exprType) {
 
     // If the user selected a layer but didn't actually highlight a property
     if (appliedCount === 0) {
-        alert("Please select a specific property (like Position, Scale, or Rotation) in the timeline to apply this expression to.");
+        alert("Please select a Text Layer to apply this counting animation.");
     }
     
     app.endUndoGroup();
 }
 
+
+// --- EASING COPIER TOOL ---
+var sniprrCopiedEase = null; // Global variable to hold copied ease data
+
+function sniprrCopyEase() {
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) return "ERROR: No composition selected.";
+
+    var props = comp.selectedProperties;
+    if (props.length === 0) return "ERROR: Please select a keyframe to copy its easing.";
+
+    // Find the first selected property that has selected keyframes
+    for (var i = 0; i < props.length; i++) {
+        var prop = props[i];
+        if (prop.canVaryOverTime && prop.selectedKeys.length > 0) {
+            var keyIndex = prop.selectedKeys[0]; // Copy from the first selected keyframe
+            
+            try {
+                var inEase = prop.keyInTemporalEase(keyIndex);
+                var outEase = prop.keyOutTemporalEase(keyIndex);
+                
+                sniprrCopiedEase = { inEase: inEase, outEase: outEase };
+                return "SUCCESS";
+            } catch (err) {
+                return "ERROR: Selected property does not support temporal easing.";
+            }
+        }
+    }
+    return "ERROR: No keyframes selected.";
+}
+
+function sniprrApplyEase() {
+    if (!sniprrCopiedEase) return "ERROR: You haven't copied any easing yet!";
+    
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) return "ERROR: No composition selected.";
+
+    app.beginUndoGroup("Sniprr Apply Easing");
+    var props = comp.selectedProperties;
+    var appliedCount = 0;
+
+    for (var i = 0; i < props.length; i++) {
+        var prop = props[i];
+        if (prop.canVaryOverTime && prop.selectedKeys.length > 0) {
+            for (var k = 0; k < prop.selectedKeys.length; k++) {
+                var keyIndex = prop.selectedKeys[k];
+                
+                try {
+                    // Determine how many dimensions this property has (e.g. Scale has 2 or 3, Rotation has 1)
+                    var targetEase = prop.keyInTemporalEase(keyIndex);
+                    var targetDim = targetEase.length;
+                    
+                    var newInEase = [];
+                    var newOutEase = [];
+                    
+                    // Match the copied ease dimensions to the target property's dimensions
+                    for(var dim = 0; dim < targetDim; dim++) {
+                        var sourceIn = sniprrCopiedEase.inEase[Math.min(dim, sniprrCopiedEase.inEase.length - 1)];
+                        var sourceOut = sniprrCopiedEase.outEase[Math.min(dim, sniprrCopiedEase.outEase.length - 1)];
+                        
+                        newInEase.push(new KeyframeEase(sourceIn.speed, sourceIn.influence));
+                        newOutEase.push(new KeyframeEase(sourceOut.speed, sourceOut.influence));
+                    }
+
+                    prop.setTemporalEaseAtKey(keyIndex, newInEase, newOutEase);
+                    appliedCount++;
+                } catch(err) {
+                    // Ignore properties that don't accept standard temporal easing
+                }
+            }
+        }
+    }
+    app.endUndoGroup();
+    
+    if (appliedCount > 0) {
+        return "SUCCESS:" + appliedCount; // Returns success and how many keys were affected
+    } else {
+        return "ERROR: Please select keyframes to apply the easing to.";
+    }
+}
+
+
+// --- PRESET & QUICK EASING LOGIC ---
+
+function sniprrApplyPresetEase(type) {
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) return "ERROR: No composition selected.";
+
+    app.beginUndoGroup("Sniprr Preset Easing");
+    var props = comp.selectedProperties;
+    var appliedCount = 0;
+
+    // Define standard preset curves (Speed, Influence)
+    // Define standard preset curves (Speed = 0, Influence In, Influence Out)
+    var presets = {
+        "ease75":   { inSpeed: 0, inInf: 75,  outSpeed: 0, outInf: 75 },  // Keeps your Quick Graph working
+        
+        // 9 New Custom Grid Presets
+        "p100_100": { inSpeed: 0, inInf: 100, outSpeed: 0, outInf: 100 }, // 1
+        "p50_50":   { inSpeed: 0, inInf: 50,  outSpeed: 0, outInf: 50 },  // 2
+        "p33_33":   { inSpeed: 0, inInf: 33,  outSpeed: 0, outInf: 33 },  // 3
+        "p25_25":   { inSpeed: 0, inInf: 25,  outSpeed: 0, outInf: 25 },  // 4
+        "p10_10":   { inSpeed: 0, inInf: 10,  outSpeed: 0, outInf: 10 },  // 5
+        "p100_5":   { inSpeed: 0, inInf: 100, outSpeed: 0, outInf: 5 },   // 6
+        "p5_100":   { inSpeed: 0, inInf: 5,   outSpeed: 0, outInf: 100 }, // 7
+        "p75_33":   { inSpeed: 0, inInf: 75,  outSpeed: 0, outInf: 33 },  // 8
+        "p33_75":   { inSpeed: 0, inInf: 33,  outSpeed: 0, outInf: 75 }   // 9
+    };
+
+    var p = presets[type];
+    if (!p) return "ERROR: Invalid preset.";
+
+    for (var i = 0; i < props.length; i++) {
+        var prop = props[i];
+        if (prop.canVaryOverTime && prop.selectedKeys.length > 0) {
+            for (var k = 0; k < prop.selectedKeys.length; k++) {
+                var keyIndex = prop.selectedKeys[k];
+                try {
+                    // Create Ease objects for this dimension
+                    var easeInObj = new KeyframeEase(p.inSpeed, p.inInf);
+                    var easeOutObj = new KeyframeEase(p.outSpeed, p.outInf);
+                    
+                    var targetDim = prop.keyInTemporalEase(keyIndex).length;
+                    var newIn = [], newOut = [];
+                    for(var dim = 0; dim < targetDim; dim++) {
+                        newIn.push(easeInObj);
+                        newOut.push(easeOutObj);
+                    }
+                    
+                    prop.setTemporalEaseAtKey(keyIndex, newIn, newOut);
+                    appliedCount++;
+                } catch(err) { }
+            }
+        }
+    }
+    app.endUndoGroup();
+    return appliedCount > 0 ? ("SUCCESS:" + appliedCount) : "ERROR: Select keyframes.";
+}
 
 // PURGE ALL MEMORY & DISK CACHE
 // PURGE ALL MEMORY & DISK CACHE

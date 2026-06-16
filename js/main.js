@@ -697,5 +697,87 @@ window.runNullWithShift = function(e) {
     // createLayer arguments: type, colorHex, userLabel, parentToNull
     csInterface.evalScript(`createLayer("null", null, null, ${isShift})`);
 };
-// Start
+
+// Placeholder functions for the Easing Panel
+
+// --- EASING PANEL LOGIC ---
+
+// --- EASING PANEL & PRESET LOGIC ---
+
+// Existing Copy Function
+function copyEasing() {
+    const statusText = document.getElementById('epStatus');
+    csInterface.evalScript('sniprrCopyEase()', (result) => {
+        if (result === "SUCCESS") {
+            statusText.innerText = "1 keys copied";
+            statusText.style.color = "#4ade80"; 
+            setTimeout(() => statusText.style.color = "#888888", 1500);
+        } else if (result.includes("ERROR")) alert(result.replace("ERROR: ", ""));
+    });
+}
+
+// Existing Paste Function
+function applyEasing() {
+    const statusText = document.getElementById('epStatus');
+    csInterface.evalScript('sniprrApplyEase()', (result) => {
+        if (result.startsWith("SUCCESS")) {
+            const count = result.split(":")[1]; 
+            statusText.innerText = `${count} keys pasted!`;
+            statusText.style.color = "#a855f7"; 
+            setTimeout(() => {
+                statusText.innerText = "1 keys copied"; 
+                statusText.style.color = "#888888";
+            }, 1500);
+        } else if (result.includes("ERROR")) alert(result.replace("ERROR: ", ""));
+    });
+}
+
+// --- NEW MENU LOGIC ---
+
+// Toggle the floating menu
+function togglePresetsMenu(e) {
+    if (e) e.stopPropagation(); // Prevent document click from firing immediately
+    const menu = document.getElementById('epPresetsMenu');
+    const btn = document.getElementById('epPresetsTrigger');
+    
+    if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        btn.classList.add('active');
+    } else {
+        menu.classList.add('hidden');
+        btn.classList.remove('active');
+    }
+}
+
+// Close the floating menu if the user clicks anywhere else in the extension window
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('epPresetsMenu');
+    const triggerBtn = document.getElementById('epPresetsTrigger');
+    
+    if (menu && triggerBtn && !menu.contains(e.target) && !triggerBtn.contains(e.target)) {
+        menu.classList.add('hidden');
+        triggerBtn.classList.remove('active');
+    }
+});
+
+// Send the selected preset to After Effects
+function applyPreset(presetType) {
+    const statusText = document.getElementById('epStatus');
+    
+    csInterface.evalScript(`sniprrApplyPresetEase("${presetType}")`, (result) => {
+        if (result.startsWith("SUCCESS")) {
+            const count = result.split(":")[1];
+            statusText.innerText = `${count} keys eased!`;
+            statusText.style.color = "#a855f7"; 
+            setTimeout(() => statusText.style.color = "#888888", 1500);
+            
+            // Auto-close menu on successful apply
+            document.getElementById('epPresetsMenu').classList.add('hidden');
+            document.getElementById('epPresetsTrigger').classList.remove('active');
+        } else if (result.includes("ERROR")) {
+            alert(result.replace("ERROR: ", ""));
+        }
+    });
+}
+
 init();

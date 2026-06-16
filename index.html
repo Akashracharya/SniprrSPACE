@@ -12,10 +12,12 @@
 
         <header class="top-bar">
             <img src="assets/main.png" class="app-logo" alt="SniprrSPACE">
-            
+
             <div class="top-action-dock">
-                <button class="mini-btn" id="btnSnap" title="Click: Save Snapshot&#10;Shift+Click: Change Folder">SNAP</button>
-                <button class="mini-btn" id="btnPaste" title="Click: Paste to Project&#10;Shift+Click: Paste to Timeline (CTI)">PASTE</button>
+                <button class="mini-btn" id="btnSnap"
+                    title="Click: Save Snapshot&#10;Shift+Click: Change Folder">SNAP</button>
+                <button class="mini-btn" id="btnPaste"
+                    title="Click: Paste to Project&#10;Shift+Click: Paste to Timeline (CTI)">PASTE</button>
             </div>
         </header>
 
@@ -25,9 +27,11 @@
                 <div class="path-and-page-row">
                     <div style="display: flex; align-items: center;">
                         <div class="info-bar" id="currentPathDisplay">Select a folder...</div>
-                        <button id="sfxHoverToggle" class="tool-btn hidden" style="height: 22px; padding: 0 10px; font-size: 9px; margin-left: 15px; margin-bottom: 0;">HOVER: OFF</button>
+                        <button id="sfxHoverToggle" class="tool-btn hidden"
+                            style="height: 22px; padding: 0 10px; font-size: 9px; margin-left: 15px; margin-bottom: 0;">HOVER:
+                            OFF</button>
                     </div>
-                    
+
                     <div id="paginationBar" class="pagination-bar inline-pagination"></div>
                 </div>
 
@@ -41,31 +45,33 @@
         <div class="tools-view hidden" id="toolsView">
             <div class="upper">
 
-                
+
+
+                <div class="split-dock-row">
+                    <div class="layer-creation-dock">
+                        <button class="mini-btn" onclick="runScript('createLayer', 'adjustment')">ADJ</button>
+                        <button class="mini-btn" onclick="runNullWithShift(event)"
+                            title="Click: Create Null&#10;Shift+Click: Parent selected to Null">NULL</button>
+                        <button class="mini-btn" id="btnSolid">SOL</button>
+                        <button class="mini-btn" onclick="runScript('createLayer', 'camera')">CAM</button>
+                        <button class="mini-btn" onclick="runScript('createLayer', 'text')">TXT</button>
+                    </div>
+
+
+                </div>
                 <div class="pre-comp-group" style="display:flex; gap:4px;">
                     <button class="mini-btn pre-comp-btn" id="btnPrecompose"
                         title="Click: Group Layers&#10;Shift+Click: Separate Pre-comps">PRE-COMP</button>
                     <button class="mini-btn pre-comp-btn" id="btnUnPrecompose"
                         title="Un-Precompose Selection">UN-PRE</button>
                 </div>
-                <input type="text" id="layerNameInput" class="main-input" placeholder="Comp Name...">
 
             </div>
 
             <div class="tools-flex-wrapper">
 
                 <div class="tools-left-col">
-                    <div class="split-dock-row">
-                        <div class="layer-creation-dock">
-                            <button class="mini-btn" onclick="runScript('createLayer', 'adjustment')">ADJ</button>
-                            <button class="mini-btn" onclick="runNullWithShift(event)" title="Click: Create Null&#10;Shift+Click: Parent selected to Null">NULL</button>
-                            <button class="mini-btn" id="btnSolid">SOL</button>
-                            <button class="mini-btn" onclick="runScript('createLayer', 'camera')">CAM</button>
-                            <button class="mini-btn" onclick="runScript('createLayer', 'text')">TXT</button>
-                        </div>
-                        
 
-                    </div>
                     <div class="split-dock-row">
 
                         <div class="dock-container">
@@ -90,12 +96,17 @@
                     </div>
 
                     <div class="compact-grid">
-                        <button class="tool-btn" onclick="runScript('applyExpression', 'bounce')" title="Elastic Overshoot">BNC</button>
-                        <button class="tool-btn" onclick="runScript('applyExpression', 'wiggle')" title="Wiggle(2, 20)">WIGL</button>
-                        <button class="tool-btn" onclick="runScript('applyExpression', 'loop')" title="Loop Out Cycle">LOOP</button>
-                        <button class="tool-btn" onclick="runScript('applyExpression', 'spin')" title="Continuous Rotation">SPIN</button>
-                        
-                        <button class="tool-btn" onclick="runScript('applyExpression', 'timer')" title="Stopwatch Timer (Use on Text Layer)">TMR</button>
+                        <button class="tool-btn" onclick="runScript('applyExpression', 'bounce')"
+                            title="Elastic Overshoot">BNC</button>
+                        <button class="tool-btn" onclick="runScript('applyExpression', 'wiggle')"
+                            title="Wiggle(2, 20)">WIGL</button>
+                        <button class="tool-btn" onclick="runScript('applyExpression', 'loop')"
+                            title="Loop Out Cycle">LOOP</button>
+                        <button class="tool-btn" onclick="runScript('applyExpression', 'spin')"
+                            title="Continuous Rotation">SPIN</button>
+
+                        <button class="tool-btn" onclick="runScript('applyExpression', 'timer')"
+                            title="Stopwatch Timer (Use on Text Layer)">TMR</button>
                     </div>
 
 
@@ -124,6 +135,102 @@
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 7)"></div>
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 8)"></div>
                         <div class="anchor-btn" onclick="runScript('setAnchorPoint', 9)"></div>
+                    </div>
+
+                    <div class="easing-panel">
+                        <div class="ep-header">
+                            <span class="ep-status" id="epStatus">0 keys copied</span>
+                            <div class="ep-actions">
+                                <button class="ep-btn ep-btn-large" onclick="copyEasing()" title="Copy Easing">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                                <button class="ep-btn ep-btn-large" onclick="applyEasing()" title="Apply Easing">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="ep-body">
+                            <button class="ep-add-btn" id="epPresetsTrigger" onclick="togglePresetsMenu(event)"
+                                title="Open Presets">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </button>
+
+                            <button class="ep-quick-graph" onclick="applyPreset('ease75')" title="Quick Ease (75/75)">
+                                <svg viewBox="0 0 160 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"
+                                    style="width: 100%; height: 100%; display: block;">
+
+                                    <rect width="160" height="80" fill="#181818" />
+                                    <g stroke="#2a2a2a" stroke-width="1">
+                                        <line x1="0" y1="20" x2="160" y2="20" />
+                                        <line x1="0" y1="40" x2="160" y2="40" />
+                                        <line x1="0" y1="60" x2="160" y2="60" />
+                                        <line x1="40" y1="0" x2="40" y2="80" />
+                                        <line x1="80" y1="0" x2="80" y2="80" />
+                                        <line x1="120" y1="0" x2="120" y2="80" />
+                                    </g>
+
+                                    <line x1="0" y1="70" x2="160" y2="70" stroke="#444" stroke-width="1.5" />
+
+                                    <path d="M 20,70 C 110,70 50,10 140,10" fill="none" stroke="#a855f7"
+                                        stroke-width="2.5" stroke-linecap="round" />
+
+                                    <line x1="20" y1="70" x2="85" y2="70" stroke="#facc15" stroke-width="1.5" />
+                                    <circle cx="85" cy="70" r="3" fill="#facc15" />
+
+                                    <line x1="140" y1="10" x2="75" y2="10" stroke="#facc15" stroke-width="1.5" />
+                                    <circle cx="75" cy="10" r="3" fill="#facc15" />
+
+                                    <rect x="17.5" y="67.5" width="5" height="5" fill="#ffffff"
+                                        transform="rotate(45 20 70)" />
+                                    <rect x="137.5" y="7.5" width="5" height="5" fill="#ffffff"
+                                        transform="rotate(45 140 10)" />
+
+                                </svg>
+                            </button>
+                        </div>
+
+
+                        <div class="ep-presets-menu hidden" id="epPresetsMenu">
+                            <button class="ep-preset-item" onclick="applyPreset('p100_100')" title="100, 100">
+                                <img src="assets/ease_100_100.png" alt="100, 100">
+                            </button>
+                            <button class="ep-preset-item" onclick="applyPreset('p50_50')" title="50, 50">
+                                <img src="assets/ease_50_50.png" alt="50, 50">
+                            </button>
+                            <button class="ep-preset-item" onclick="applyPreset('p33_33')" title="33, 33">
+                                <img src="assets/ease_33_33.png" alt="33, 33">
+                            </button>
+                            <button class="ep-preset-item" onclick="applyPreset('p25_25')" title="25, 25">
+                                <img src="assets/ease_25_25.png" alt="25, 25">
+                            </button>
+                            <button class="ep-preset-item" onclick="applyPreset('p10_10')" title="10, 10">
+                                <img src="assets/ease_10_10.png" alt="10, 10">
+                            </button>
+                            <button class="ep-preset-item" onclick="applyPreset('p100_5')" title="100, 5">
+                                <img src="assets/ease_100_5.png" alt="100, 5">
+                            </button>
+                            <button class="ep-preset-item" onclick="applyPreset('p5_100')" title="5, 100">
+                                <img src="assets/ease_5_100.png" alt="5, 100">
+                            </button>
+                            <button class="ep-preset-item" onclick="applyPreset('p75_33')" title="75, 33">
+                                <img src="assets/ease_75_33.png" alt="75, 33">
+                            </button>
+                            <button class="ep-preset-item" onclick="applyPreset('p33_75')" title="33, 75">
+                                <img src="assets/ease_33_75.png" alt="33, 75">
+                            </button>
+                        </div>
                     </div>
                 </div>
 

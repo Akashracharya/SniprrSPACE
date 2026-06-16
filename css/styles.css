@@ -1161,91 +1161,61 @@ body {
     text-shadow: 0 0 10px rgba(127, 0, 255, 0.4);
 }
 
+/* =========================================
+   COMPACT ANCHOR GRID
+   ========================================= */
+
 .anchor-grid {
     display: grid;
-    grid-template-columns: repeat(3, 30px); /* 3x3 Grid */
-    grid-template-rows: repeat(3, 30px);
-    gap: 4px;
-    
-    /* The Pad Container */
-    padding: 6px;
-    background: #111;
-    border-radius: 8px;
-    border: 1px solid rgba(127, 0, 255, 0.15); /* Purple Tint Border */
-    
-    /* 3D Sunken Look for the whole pad */
-    box-shadow: 
-        inset 0 2px 5px rgba(0,0,0,0.8),
-        0 4px 10px rgba(0,0,0,0.3);
+    grid-template-columns: repeat(3, 1fr);
+    width: 80px;  /* Compact size */
+    height: 80px; /* Perfect square */
+    background: #383838; /* This color shines through the gap to create borders */
+    gap: 1px; /* Creates the 1px inner grid lines */
+    border: 1px solid #383838;
+    border-radius: 6px;
+    overflow: hidden; /* Clips the corners perfectly */
 }
 
-/* Individual Anchor Buttons */
 .anchor-btn {
-    position: relative; /* For absolute positioning of the dot */
-    background: #1f1f1f;
-    border-radius: 4px;
+    background: #1a1a1a;
+    border: none;
+    padding: 0;
     cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.05);
-    
-    /* 3D Button Look */
-    box-shadow: 0 2px 0 #000;
-    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888888; /* Default Sniprr inactive color */
+    transition: all 0.15s ease;
 }
 
-/* The "Dot" Indicator inside the button */
-.anchor-btn::after {
-    content: '';
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: #555; /* Default Grey Dot */
-    border-radius: 1px;
-    transition: 0.2s;
-    
-    /* Default Center Alignment for safety */
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+.anchor-btn svg {
+    width: 18px;
+    height: 18px;
+    opacity: 0.8;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-/* --- DOT POSITIONS (The Visual Trick) --- */
-/* Top Row */
-.anchor-btn:nth-child(1)::after { top: 6px; left: 6px; } /* TL */
-.anchor-btn:nth-child(2)::after { top: 6px; left: 50%; } /* TC */
-.anchor-btn:nth-child(3)::after { top: 6px; right: 6px; left: auto; transform: translate(50%, -50%); } /* TR */
-
-/* Mid Row */
-.anchor-btn:nth-child(4)::after { top: 50%; left: 6px; } /* ML */
-.anchor-btn:nth-child(5)::after { width: 8px; height: 8px; border-radius: 2px; } /* Center (Bigger) */
-.anchor-btn:nth-child(6)::after { top: 50%; right: 6px; left: auto; transform: translate(50%, -50%); } /* MR */
-
-/* Bot Row */
-.anchor-btn:nth-child(7)::after { bottom: 6px; top: auto; left: 6px; transform: translate(-50%, 50%); } /* BL */
-.anchor-btn:nth-child(8)::after { bottom: 6px; top: auto; left: 50%; transform: translate(-50%, 50%); } /* BC */
-.anchor-btn:nth-child(9)::after { bottom: 6px; top: auto; right: 6px; left: auto; transform: translate(50%, 50%); } /* BR */
-
-
-/* --- INTERACTIONS --- */
-
-/* Hover: Purple Glow */
+/* Hover State */
 .anchor-btn:hover {
+    background: #252525;
+    color: #ffffff;
+}
+
+.anchor-btn:hover svg {
+    opacity: 1;
+    transform: scale(1.1); /* Subtle pop on hover */
+}
+
+/* Active/Clicked State */
+.anchor-btn.active {
     background: #2a2a2a;
-    border-color: var(--accent-sfx);
-}
-.anchor-btn:hover::after {
-    background: #fff; /* White dot on hover */
-    box-shadow: 0 0 8px var(--accent-sfx); /* Purple Glow */
+    color: #a855f7; /* Sniprr Purple */
 }
 
-/* Active (Click): Press Down */
-.anchor-btn:active {
-    transform: translateY(2px); /* Push down */
-    box-shadow: 0 0 0 #000;     /* Remove shadow */
-    background: var(--accent-sfx); /* Turn Purple */
+.anchor-btn.active svg {
+    opacity: 1;
 }
-.anchor-btn:active::after {
-    background: #fff;
-}
-
 /* --- FLOATING FOLDER BUTTON --- */
 .floating-folder-btn {
     position: absolute;
@@ -1676,7 +1646,7 @@ button:focus,
 .easing-panel {
     display: flex;
     flex-direction: column;
-    width: 110px;            
+    width: 80px;            
     height: auto;           
     background-color: #111111;
     border: 1px solid #222222;
@@ -1749,7 +1719,7 @@ button:focus,
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 34px; /* Fixed square */
+    width: 20px; /* Fixed square */
     flex-shrink: 0;
     transition: all 0.2s ease;
 }
@@ -1873,7 +1843,7 @@ button:focus,
 
 .compact-frame-skip {
     display: flex;
-    width: 110px; /* Matches the compact width of your graph div */
+    width: 80px; /* Matches the compact width of your graph div */
     background: #1a1a1a;
     border: 1px solid #383838;
     border-radius: 6px;

@@ -111,16 +111,61 @@
                 </div>
 
                 <div class="tools-right-col">
-                    <div class="anchor-grid">
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 1)"></div>
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 2)"></div>
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 3)"></div>
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 4)"></div>
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 5)"></div>
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 6)"></div>
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 7)"></div>
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 8)"></div>
-                        <div class="anchor-btn" onclick="runScript('setAnchorPoint', 9)"></div>
+                    <div class="anchor-grid" id="anchorGrid">
+                        <button class="anchor-btn" onclick="triggerAnchor(this, 1)" title="Top Left">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M 11 15 L 11 11 L 15 11" fill="none" stroke="currentColor" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <button class="anchor-btn" onclick="triggerAnchor(this, 2)" title="Top Center">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M 9 11 L 15 11 M 12 11 L 12 15" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <button class="anchor-btn" onclick="triggerAnchor(this, 3)" title="Top Right">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M 13 15 L 13 11 L 9 11" fill="none" stroke="currentColor" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <button class="anchor-btn" onclick="triggerAnchor(this, 4)" title="Middle Left">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M 11 9 L 11 15 M 11 12 L 15 12" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <button class="anchor-btn active" onclick="triggerAnchor(this, 5)" title="Center">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M 12 9 L 12 15 M 9 12 L 15 12" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <button class="anchor-btn" onclick="triggerAnchor(this, 6)" title="Middle Right">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M 13 9 L 13 15 M 13 12 L 9 12" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <button class="anchor-btn" onclick="triggerAnchor(this, 7)" title="Bottom Left">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M 11 9 L 11 13 L 15 13" fill="none" stroke="currentColor" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <button class="anchor-btn" onclick="triggerAnchor(this, 8)" title="Bottom Center">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M 9 13 L 15 13 M 12 13 L 12 9" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <button class="anchor-btn" onclick="triggerAnchor(this, 9)" title="Bottom Right">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M 13 9 L 13 13 L 9 13" fill="none" stroke="currentColor" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
                     </div>
                     <div class="compact-frame-skip">
                         <button class="cfs-btn" onclick="runScript('moveCTI', -5)">-5</button>
@@ -151,11 +196,7 @@
                         <div class="ep-body">
                             <button class="ep-add-btn" id="epPresetsTrigger" onclick="togglePresetsMenu(event)"
                                 title="Open Presets">
-                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
+                                +
                             </button>
 
                             <button class="ep-quick-graph" onclick="applyPreset('ease75')" title="Quick Ease (75/75)">

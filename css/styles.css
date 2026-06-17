@@ -1670,6 +1670,7 @@ button:focus,
 .ep-actions {
     display: flex;
     gap: 6px; /* Slightly more space between bigger buttons */
+    height: 15px;
 }
 
 /* Base button */
@@ -1973,3 +1974,38 @@ button:focus,
     color: #ffffff;
     box-shadow: 0 0 10px rgba(220, 38, 38, 0.3); /* Red glow */
 }
+
+/* --- PRESETS ONLY: 3x3 GRID --- */
+.layout-presets-3x3 {
+    display: grid;
+
+    /* Force exactly 3 columns */
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 10px;
+    padding: 15px;
+}
+
+/* Adjust card height for the 3-column width */
+.layout-presets-3x3 .asset-card {
+    height: 75px; 
+}
+
+/* Make the Text Thumbnail fill the height */
+.layout-presets-3x3 .text-thumbnail, 
+.layout-presets-3x3 .hover-video,
+.layout-presets-3x3 .card-media {
+    height: 100%; 
+}
+
+/* Adjust font size so titles don't overflow */
+.layout-presets-3x3 .thumb-title {
+    font-size: 14px; 
+}
+
+/* Adjust the NO PREVIEW tag position */
+.layout-presets-3x3 .no-preview-tag {
+    font-size: 9px;
+    padding: 3px 6px;
+    margin-top: 6px;
+}
+

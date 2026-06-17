@@ -1179,3 +1179,43 @@ function purgeSniprrRAM() {
         return "Error";
     }
 }
+
+// --- GLASSMORPHIC BORDER GENERATOR ---
+// --- GLASSMORPHIC BORDER GENERATOR ---
+// --- PREMIUM AE LAYER GLASS EDGE GENERATOR ---
+
+// --- APPLY WHITE FILL EFFECT ---
+function applyWhiteFill() {
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) {
+        alert("Please select a composition.");
+        return;
+    }
+
+    var layers = comp.selectedLayers;
+    if (layers.length === 0) {
+        alert("Please select at least one layer to fill.");
+        return;
+    }
+
+    app.beginUndoGroup("Sniprr White Fill");
+
+    for (var i = 0; i < layers.length; i++) {
+        var layer = layers[i];
+        try {
+            // Target the Effects group
+            var effects = layer.property("ADBE Effect Parade");
+            if (!effects) continue;
+
+            // Add the native 'Fill' effect
+            var fillEffect = effects.addProperty("ADBE Fill");
+            
+            // Set the 'Color' property of the Fill effect to White [R, G, B, Alpha]
+            fillEffect.property("ADBE Fill-0002").setValue([1, 1, 1, 1]);
+        } catch(err) {
+            // Will gracefully skip layers that cannot accept effects (like Cameras or Lights)
+        }
+    }
+    
+    app.endUndoGroup();
+}

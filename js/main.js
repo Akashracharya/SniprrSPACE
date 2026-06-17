@@ -34,7 +34,7 @@ let loadContentTimer = null;
 function getBatchSize() {
     if (activeTab === 'SFX') return 60; // 3x7
     if (activeTab === 'GFX') return 6;
-    if (activeTab === 'PRESETS') return 4;  // 3x2
+    if (activeTab === 'PRESETS') return 9;  // 3x2
     return 9; 
 }
 
@@ -151,30 +151,31 @@ function switchTabContent(tabName) {
     const browserView = document.getElementById('browserView');
     const toolsView = document.getElementById('toolsView');
     const hoverToggle = document.getElementById('sfxHoverToggle');
-    
-    // Grab the main wrapper that holds everything
+    const savePresetBtn = document.getElementById('savePresetBtn'); // NEW
     const contentArea = document.querySelector('.content-area'); 
 
-    // --- 1. RESTART THE ANIMATION ---
-    // Remove the class, force the browser to read the change, then add it back.
-    // This creates a smooth transition every single time a tab is clicked!
     contentArea.classList.remove('tab-transition');
-    void contentArea.offsetWidth; // <--- The magic line that forces a CSS reset
+    void contentArea.offsetWidth; 
     contentArea.classList.add('tab-transition');
 
-    // --- 2. SWITCH THE VIEWS ---
     if (activeTab === 'MAIN') {
         browserView.classList.add('hidden');
         toolsView.classList.remove('hidden');
-        if(hoverToggle) hoverToggle.classList.add('hidden'); // Hide on MAIN
+        if(hoverToggle) hoverToggle.classList.add('hidden'); 
+        if(savePresetBtn) savePresetBtn.classList.add('hidden'); // Hide on Main
     } else {
         toolsView.classList.add('hidden');
         browserView.classList.remove('hidden');
         
-        // Only show the hover toggle if we are on the SFX tab
         if (hoverToggle) {
             if (activeTab === 'SFX') hoverToggle.classList.remove('hidden');
             else hoverToggle.classList.add('hidden');
+        }
+
+        // Show Save button ONLY on PRESETS tab
+        if (savePresetBtn) {
+            if (activeTab === 'PRESETS') savePresetBtn.classList.remove('hidden');
+            else savePresetBtn.classList.add('hidden');
         }
 
         loadCategories(tabName); 
@@ -317,7 +318,7 @@ function loadGrid(tabName, category) {
     } 
     else if (tabName === 'PRESETS') {
         // APPLY THE NEW 2x2 CLASS
-        grid.classList.add('layout-presets-2x2');
+        grid.classList.add('layout-presets-3x3');
     } 
     else {
         grid.classList.add('layout-gallery');
@@ -888,5 +889,7 @@ document.addEventListener('click', function(e) {
         }
     }
 });
+
+
 
 init();

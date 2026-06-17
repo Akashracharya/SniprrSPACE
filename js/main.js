@@ -20,22 +20,22 @@ let isPageLock = false;
 let activeTab = 'MAIN'; // Will be overridden by init
 let activeCategory = '';
 let currentAudio = null;
-let currentTabIndex = 3; 
+let currentTabIndex = 3;
 let scrollDebounce = 0;
 let snapFolderPath = localStorage.getItem('sniprr_snap_path') || '';
 
 
 // --- PAGINATION VARIABLES ---
-let allFiles = [];      
-let currentPage = 0;    
-let isLoading = false;  
+let allFiles = [];
+let currentPage = 0;
+let isLoading = false;
 let loadContentTimer = null;
 // --- DYNAMIC BATCH SIZE ---
 function getBatchSize() {
     if (activeTab === 'SFX') return 60; // 3x7
     if (activeTab === 'GFX') return 6;
     if (activeTab === 'PRESETS') return 9;  // 3x2
-    return 9; 
+    return 9;
 }
 
 function init() {
@@ -46,14 +46,14 @@ function init() {
     setupPasteTool();
     setupHoverToggle();
     // Default to MAIN on load
-    document.querySelector('.tab-btn[data-tab="MAIN"]').click(); 
+    document.querySelector('.tab-btn[data-tab="MAIN"]').click();
 }
 
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
     const navBar = document.getElementById('bottomNavBar');
     const glider = document.getElementById('tabGlider');
-    
+
 
     const updateGliderPosition = () => {
         const activeTab = document.querySelector('.tab-btn.active');
@@ -71,7 +71,7 @@ function setupTabs() {
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         currentTabIndex = index;
-        
+
         // Move Glider Animation
         if (glider) {
             glider.style.width = tab.offsetWidth + 'px';
@@ -85,7 +85,7 @@ function setupTabs() {
         // Wait 400ms. If user doesn't switch again, THEN load the files.
         loadContentTimer = setTimeout(() => {
             switchTabContent(tab.getAttribute('data-tab'));
-        }, 400); 
+        }, 400);
     };
 
     // 1. Click Logic
@@ -102,7 +102,7 @@ function setupTabs() {
         navBar.addEventListener('wheel', (e) => {
             // Limit scroll speed slightly (UI Debounce)
             if (Date.now() - scrollDebounce < 150) return;
-            
+
             if (e.deltaY > 0) {
                 // Scroll Down -> Next Tab
                 if (currentTabIndex < tabs.length - 1) {
@@ -131,7 +131,7 @@ function setupHoverToggle() {
     if (toggleBtn) {
         toggleBtn.onclick = () => {
             isHoverPlayEnabled = !isHoverPlayEnabled; // Flip the switch
-            
+
             if (isHoverPlayEnabled) {
                 toggleBtn.innerText = "HOVER: ON";
                 toggleBtn.classList.add('active-toggle');
@@ -152,21 +152,21 @@ function switchTabContent(tabName) {
     const toolsView = document.getElementById('toolsView');
     const hoverToggle = document.getElementById('sfxHoverToggle');
     const savePresetBtn = document.getElementById('savePresetBtn'); // NEW
-    const contentArea = document.querySelector('.content-area'); 
+    const contentArea = document.querySelector('.content-area');
 
     contentArea.classList.remove('tab-transition');
-    void contentArea.offsetWidth; 
+    void contentArea.offsetWidth;
     contentArea.classList.add('tab-transition');
 
     if (activeTab === 'MAIN') {
         browserView.classList.add('hidden');
         toolsView.classList.remove('hidden');
-        if(hoverToggle) hoverToggle.classList.add('hidden'); 
-        if(savePresetBtn) savePresetBtn.classList.add('hidden'); // Hide on Main
+        if (hoverToggle) hoverToggle.classList.add('hidden');
+        if (savePresetBtn) savePresetBtn.classList.add('hidden'); // Hide on Main
     } else {
         toolsView.classList.add('hidden');
         browserView.classList.remove('hidden');
-        
+
         if (hoverToggle) {
             if (activeTab === 'SFX') hoverToggle.classList.remove('hidden');
             else hoverToggle.classList.add('hidden');
@@ -178,7 +178,7 @@ function switchTabContent(tabName) {
             else savePresetBtn.classList.add('hidden');
         }
 
-        loadCategories(tabName); 
+        loadCategories(tabName);
     }
 }
 
@@ -186,9 +186,9 @@ function switchTabContent(tabName) {
 function loadCategories(tabName) {
     const navBar = document.getElementById('categoryNavBar'); // Reused ID
     const folderPath = path.join(assetsRoot, tabName);
-    
+
     navBar.innerHTML = '';
-    
+
     // Mouse Wheel Horizontal Scroll
     navBar.onwheel = (e) => {
         e.preventDefault();
@@ -200,32 +200,32 @@ function loadCategories(tabName) {
             navBar.innerHTML = '<div style="padding:10px; opacity:0.5; font-size:10px;">No folders</div>';
             return;
         }
-        
+
         const folders = files.filter(file => fs.statSync(path.join(folderPath, file)).isDirectory());
-        
+
         folders.forEach((cat, index) => {
             const btn = document.createElement('div');
             btn.className = 'sfx-cat-btn'; // We reuse the CSS class because it has the animation
-            
+
             const firstLetter = cat.charAt(0).toUpperCase();
             const restOfWord = cat.slice(1);
             btn.innerHTML = `<span class="cat-icon">${firstLetter}</span><span class="cat-text">${restOfWord}</span>`;
-            
+
             btn.onclick = () => {
                 document.querySelectorAll('.sfx-cat-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                
+
                 activeCategory = cat;
                 loadGrid(tabName, cat);
             };
-            
+
             navBar.appendChild(btn);
-            
+
             // Auto-load first category
-            if(index === 0) {
+            if (index === 0) {
                 // Wait slightly for UI to settle
-                setTimeout(() => btn.click(), 50); 
+                setTimeout(() => btn.click(), 50);
             }
         });
     });
@@ -238,7 +238,7 @@ function loadCategories(tabName) {
 
 function setupSnapTools() {
     const btnSnap = document.getElementById('btnSnap');
-    
+
     // Load existing path
     let snapFolderPath = localStorage.getItem('sniprr_snap_path') || '';
 
@@ -254,7 +254,7 @@ function setupSnapTools() {
                 }
                 return;
             }
-        
+
             // 2. Setup Logic (Same as before)
             if (!snapFolderPath) {
                 const result = window.cep.fs.showOpenDialog(false, true, "Select Folder to Save Snapshots", "", []);
@@ -262,45 +262,45 @@ function setupSnapTools() {
                     snapFolderPath = result.data[0];
                     localStorage.setItem('sniprr_snap_path', snapFolderPath);
                 } else {
-                    return; 
+                    return;
                 }
             }
-        
+
             // --- NEW TIMER LOGIC STARTS HERE ---
-            
+
             let safePath = snapFolderPath.replace(/\\/g, "/");
             btnSnap.innerText = "SV..."; // Visual: "Saving..."
-        
+
             // STEP 1: Call SAVE function
             csInterface.evalScript(`saveSnapshot("${safePath}")`, (resultPath) => {
-                
+
                 // Check for errors returned from JSX
                 if (resultPath.indexOf("ERROR") !== -1) {
                     alert(resultPath);
                     btnSnap.innerText = "SNAP";
                     return;
                 }
-        
+
                 // STEP 2: Wait 1500ms (1.5 Seconds)
                 // This is the timer you requested. It runs in JS so AE doesn't freeze.
                 btnSnap.innerText = "WT..."; // Visual: "Waiting..."
-                
+
                 setTimeout(() => {
-                    
+
                     // STEP 3: Call IMPORT function
                     // We must escape backslashes for the string to pass correctly
                     const cleanImportPath = resultPath.replace(/\\/g, "\\\\");
-                    
+
                     csInterface.evalScript(`importSnapshot("${cleanImportPath}")`);
-                    
+
                     // Done
                     btnSnap.innerText = "✓";
                     setTimeout(() => btnSnap.innerText = "SNAP", 1000);
-                    
+
                 }, 1500); // <--- CHANGE THIS NUMBER (ms) if you need more/less time
             });
         };
-}
+    }
 }
 
 
@@ -315,11 +315,11 @@ function loadGrid(tabName, category) {
 
     if (tabName === 'SFX') {
         grid.classList.add('layout-sfx-grid');
-    } 
+    }
     else if (tabName === 'PRESETS') {
         // APPLY THE NEW 2x2 CLASS
         grid.classList.add('layout-presets-3x3');
-    } 
+    }
     else {
         grid.classList.add('layout-gallery');
     }
@@ -327,15 +327,15 @@ function loadGrid(tabName, category) {
     const display = document.getElementById('currentPathDisplay');
     display.innerText = `${tabName} > ${category}`;
     display.style.color = config.color;
-    
+
     // Reset Data
     allFiles = [];
     currentPage = 0;
-    
+
     fs.readdir(folderPath, (err, files) => {
         if (err) return;
         allFiles = files.filter(file => config.types.includes(path.extname(file).toLowerCase()));
-        renderPage(0); 
+        renderPage(0);
     });
 }
 
@@ -344,10 +344,10 @@ function renderPage(pageIndex) {
     const folderPath = path.join(assetsRoot, activeTab, activeCategory);
     const config = TAB_CONFIG[activeTab];
     const batchSize = getBatchSize();
-    
+
     isLoading = true;
-    grid.innerHTML = ''; 
-    grid.scrollTop = 0;  
+    grid.innerHTML = '';
+    grid.scrollTop = 0;
 
     const start = pageIndex * batchSize;
     const end = start + batchSize;
@@ -356,28 +356,28 @@ function renderPage(pageIndex) {
     batch.forEach(file => {
         const fullPath = path.join(folderPath, file);
         const displayName = file
-            .replace(/\[.*?\]/g, "")   
-            .replace(/\.[^/.]+$/, "")  
-            .replace(/\s+/g, " ")      
+            .replace(/\[.*?\]/g, "")
+            .replace(/\.[^/.]+$/, "")
+            .replace(/\s+/g, " ")
             .trim();
         const card = document.createElement('div');
         card.className = 'asset-card';
-        if(config.isPreset) card.classList.add('preset-card');
-        
+        if (config.isPreset) card.classList.add('preset-card');
+
         if (activeTab === 'SFX') {
             card.innerHTML = `<div class="preset-placeholder" style="color:${config.color}">🔊</div><div class="card-label">${displayName}</div>`;
-            
+
             // Only play if the toggle is ON
             card.onmouseenter = () => {
                 if (isHoverPlayEnabled) {
                     playAudio(fullPath);
                 }
             };
-            
+
             card.onmouseleave = () => stopAudio();
         } else if (activeTab === 'GFX') {
             const isVideo = ['.mov', '.mp4'].includes(path.extname(file).toLowerCase());
-            if(isVideo) {
+            if (isVideo) {
                 card.innerHTML = `<video class="card-media" src="${fullPath}" loop muted></video><div class="card-label">${displayName}</div>`;
                 const vid = card.querySelector('video');
                 vid.onloadedmetadata = () => { vid.currentTime = vid.duration / 2; };
@@ -391,7 +391,7 @@ function renderPage(pageIndex) {
             const dir = path.dirname(fullPath);
             const ext = path.extname(fullPath);
             const baseName = path.basename(fullPath, ext);
-            
+
             // Create "Clean Name" for display (Remove tags)
             const cleanNameDisplay = baseName.replace(/\[.*?\]/g, "").trim();
 
@@ -410,7 +410,7 @@ function renderPage(pageIndex) {
             const toUrl = (p) => {
                 if (!p) return '';
                 let forward = p.replace(/\\/g, '/');
-                let encoded = encodeURI(forward).replace(/#/g, '%23'); 
+                let encoded = encodeURI(forward).replace(/#/g, '%23');
                 return `file:///${encoded}`;
             };
 
@@ -418,7 +418,7 @@ function renderPage(pageIndex) {
             const videoSrc = toUrl(videoPathRaw);
 
             // --- 2. GENERATE HTML (Text Card First) ---
-            
+
             // A. Base Thumbnail: Big Text Name
             let innerHTML = `
                 <div class="text-thumbnail">
@@ -437,22 +437,22 @@ function renderPage(pageIndex) {
             // --- 3. PLAYBACK LOGIC ---
             if (videoPathRaw) {
                 const vid = card.querySelector('video');
-                
-                // Only load metadata, don't waste resources loading frames yet
-                vid.preload = "none"; 
 
-                card.onmouseenter = () => { 
-                    vid.currentTime = 0; 
-                    vid.play().catch(e => {}); 
+                // Only load metadata, don't waste resources loading frames yet
+                vid.preload = "none";
+
+                card.onmouseenter = () => {
+                    vid.currentTime = 0;
+                    vid.play().catch(e => { });
                 };
 
-                card.onmouseleave = () => { 
-                    vid.pause(); 
-                    vid.currentTime = 0; 
+                card.onmouseleave = () => {
+                    vid.pause();
+                    vid.currentTime = 0;
                 };
             }
         }
-        
+
         card.ondblclick = () => {
             if (config.isPreset) sendToAE('applyPreset', fullPath);
             else sendToAE('importFile', fullPath);
@@ -470,11 +470,11 @@ function nextPage() {
 
     const batchSize = getBatchSize();
     const totalPages = Math.ceil(allFiles.length / batchSize);
-    
+
     if (currentPage < totalPages - 1) {
         // 2. LOCK THE BUTTON
         isPageLock = true;
-        
+
         currentPage++;
         renderPage(currentPage);
 
@@ -512,7 +512,7 @@ function updateFloatingPagination(pageIndex) {
         // Append it to the browser view so it sits on top/bottom of grid
         document.getElementById('browserView').appendChild(container);
     }
-    
+
     container.innerHTML = ''; // Clear existing buttons
 
     const batchSize = getBatchSize();
@@ -553,14 +553,14 @@ function updateFloatingPagination(pageIndex) {
 // [REPLACE existing setupFolderButton]
 function setupFolderButton() {
     const btn = document.getElementById('openFolderBtn');
-    
+
     if (btn) {
         btn.onclick = () => {
             let targetPath = '';
-            
+
             // Logic: Always open the ROOT of the current tab
             if (activeTab === 'MAIN') {
-                targetPath = assetsRoot; 
+                targetPath = assetsRoot;
             } else {
                 // For SFX, GFX, PRESETS -> Open that main folder only
                 // We ignore 'activeCategory' here intentionally.
@@ -580,7 +580,7 @@ function setupFolderButton() {
                 if (err) {
                     // Fallback
                     const csInterface = new CSInterface();
-                    csInterface.openURL(targetPath); 
+                    csInterface.openURL(targetPath);
                 }
             });
         };
@@ -596,7 +596,7 @@ function setupPasteTool() {
         btnPaste.onclick = (e) => {
             const isShift = e.shiftKey;
             btnPaste.innerText = "WAIT"; // Shows you it's processing
-            
+
             const os = require('os');
             const fs = require('fs');
             const path = require('path');
@@ -607,7 +607,7 @@ function setupPasteTool() {
             const ext = isWin ? '.png' : '.tiff';
             const fileName = `Pasted_Image_${Date.now()}${ext}`;
             const filePath = path.join(os.tmpdir(), fileName);
-            
+
             let command = '';
 
             // Use Operating System commands to bypass Chrome's clipboard block
@@ -622,7 +622,7 @@ function setupPasteTool() {
             // Run the command!
             exec(command, (err, stdout, stderr) => {
                 const output = stdout.toString().trim();
-                
+
                 if (output.includes('NO_IMAGE') || err) {
                     alert("No image found in your clipboard!");
                     btnPaste.innerText = "PASTE";
@@ -632,7 +632,7 @@ function setupPasteTool() {
                 // Success! We have the image. Tell After Effects to import it.
                 const safePath = filePath.replace(/\\/g, "\\\\");
                 csInterface.evalScript(`importPastedImage("${safePath}", ${isShift})`);
-                
+
                 btnPaste.innerText = "DONE";
                 setTimeout(() => btnPaste.innerText = "PASTE", 1000); // Reset button text
             });
@@ -642,15 +642,20 @@ function setupPasteTool() {
 
 
 function setupMainTools() {
-    const btnPre = document.getElementById('btnPrecompose');
-    if(btnPre) {
-        btnPre.onclick = (e) => {
-            let name = document.getElementById('layerNameInput').value || "Pre-comp";
-            csInterface.evalScript(`doPrecompose(${e.shiftKey}, "${name}")`);
-        };
+    const btnPrecompose = document.getElementById('btnPrecompose');
+    if (btnPrecompose) {
+        btnPrecompose.addEventListener('click', function (e) {
+            const csInterface = new CSInterface();
+
+            // e.shiftKey is automatically 'true' if the user is holding Shift
+            const isIndividual = e.shiftKey;
+
+            // Calls the fixed doPrecompose function we just made in host.jsx
+            csInterface.evalScript(`doPrecompose(${isIndividual}, "")`);
+        });
     }
     const btnUnPre = document.getElementById('btnUnPrecompose');
-    if(btnUnPre) {
+    if (btnUnPre) {
         btnUnPre.onclick = () => {
             csInterface.evalScript('unPrecompose()');
         };
@@ -659,8 +664,8 @@ function setupMainTools() {
     const btnSolid = document.getElementById('btnSolid');
     const modal = document.getElementById('colorModal');
     const closeModal = document.getElementById('closeModal');
-    if(btnSolid) btnSolid.onclick = () => modal.classList.remove('hidden');
-    if(closeModal) closeModal.onclick = () => modal.classList.add('hidden');
+    if (btnSolid) btnSolid.onclick = () => modal.classList.remove('hidden');
+    if (closeModal) closeModal.onclick = () => modal.classList.add('hidden');
 
     document.querySelectorAll('.color-swatch').forEach(swatch => {
         swatch.onclick = () => {
@@ -674,7 +679,7 @@ function playAudio(path) {
     stopAudio();
     currentAudio = new Audio(path);
     currentAudio.volume = 0.5;
-    currentAudio.play().catch(e => {});
+    currentAudio.play().catch(e => { });
 }
 
 function stopAudio() {
@@ -690,7 +695,7 @@ function sendToAE(funcName, filePath) {
 }
 
 // Global Wrapper
-window.runScript = function(funcName, arg1, arg2) {
+window.runScript = function (funcName, arg1, arg2) {
     let script = `${funcName}()`;
     if (arg1 !== undefined && arg2 !== undefined) script = `${funcName}("${arg1}", "${arg2}")`;
     else if (arg1 !== undefined) script = typeof arg1 === 'number' ? `${funcName}(${arg1})` : `${funcName}("${arg1}")`;
@@ -698,7 +703,7 @@ window.runScript = function(funcName, arg1, arg2) {
 };
 
 
-window.runNullWithShift = function(e) {
+window.runNullWithShift = function (e) {
     const isShift = e.shiftKey;
     // createLayer arguments: type, colorHex, userLabel, parentToNull
     csInterface.evalScript(`createLayer("null", null, null, ${isShift})`);
@@ -716,7 +721,7 @@ function copyEasing() {
     csInterface.evalScript('sniprrCopyEase()', (result) => {
         if (result === "SUCCESS") {
             statusText.innerText = "1 keys copied";
-            statusText.style.color = "#4ade80"; 
+            statusText.style.color = "#4ade80";
             setTimeout(() => statusText.style.color = "#888888", 1500);
         } else if (result.includes("ERROR")) alert(result.replace("ERROR: ", ""));
     });
@@ -727,11 +732,11 @@ function applyEasing() {
     const statusText = document.getElementById('epStatus');
     csInterface.evalScript('sniprrApplyEase()', (result) => {
         if (result.startsWith("SUCCESS")) {
-            const count = result.split(":")[1]; 
+            const count = result.split(":")[1];
             statusText.innerText = `${count} keys pasted!`;
-            statusText.style.color = "#a855f7"; 
+            statusText.style.color = "#a855f7";
             setTimeout(() => {
-                statusText.innerText = "1 keys copied"; 
+                statusText.innerText = "1 keys copied";
                 statusText.style.color = "#888888";
             }, 1500);
         } else if (result.includes("ERROR")) alert(result.replace("ERROR: ", ""));
@@ -745,7 +750,7 @@ function togglePresetsMenu(e) {
     if (e) e.stopPropagation(); // Prevent document click from firing immediately
     const menu = document.getElementById('epPresetsMenu');
     const btn = document.getElementById('epPresetsTrigger');
-    
+
     if (menu.classList.contains('hidden')) {
         menu.classList.remove('hidden');
         btn.classList.add('active');
@@ -759,7 +764,7 @@ function togglePresetsMenu(e) {
 document.addEventListener('click', (e) => {
     const menu = document.getElementById('epPresetsMenu');
     const triggerBtn = document.getElementById('epPresetsTrigger');
-    
+
     if (menu && triggerBtn && !menu.contains(e.target) && !triggerBtn.contains(e.target)) {
         menu.classList.add('hidden');
         triggerBtn.classList.remove('active');
@@ -773,14 +778,14 @@ function applyPreset(presetType) {
     const triggerBtn = document.getElementById('epPresetsTrigger');
     if (menu) menu.classList.add('hidden');
     if (triggerBtn) triggerBtn.classList.remove('active');
-    
+
     csInterface.evalScript(`sniprrApplyPresetEase("${presetType}")`, (result) => {
         if (result.startsWith("SUCCESS")) {
             const count = result.split(":")[1];
             statusText.innerText = `${count} keys eased!`;
-            statusText.style.color = "#a855f7"; 
+            statusText.style.color = "#a855f7";
             setTimeout(() => statusText.style.color = "#888888", 1500);
-            
+
             // Auto-close menu on successful apply
             document.getElementById('epPresetsMenu').classList.add('hidden');
             document.getElementById('epPresetsTrigger').classList.remove('active');
@@ -790,15 +795,15 @@ function applyPreset(presetType) {
     });
 }
 // --- ANCHOR GRID LOGIC ---
-window.triggerAnchor = function(clickedBtn, posIndex) {
+window.triggerAnchor = function (clickedBtn, posIndex) {
     // 1. Send the exact position number to After Effects
     const csInterface = new CSInterface();
     csInterface.evalScript(`setAnchorPoint(${parseInt(posIndex)})`);
-    
+
     // 2. Clear 'active' styling from all buttons in the grid
     const allBtns = document.querySelectorAll('.anchor-btn');
     allBtns.forEach(btn => btn.classList.remove('active'));
-    
+
     // 3. Highlight the button you just clicked in Sniprr Purple
     if (clickedBtn) {
         clickedBtn.classList.add('active');
@@ -811,29 +816,29 @@ window.triggerAnchor = function(clickedBtn, posIndex) {
 // 1. Fetch and update the RAM usage in the UI
 function updateRAM() {
     const csInterface = new CSInterface();
-    csInterface.evalScript('getSniprrRAM()', function(result) {
+    csInterface.evalScript('getSniprrRAM()', function (result) {
         const ramText = document.getElementById('ramText');
         const ramDot = document.getElementById('ramDot');
-        
+
         // Make sure we didn't get an error back from AE
         if (result && result !== "Error") {
             ramText.innerText = result + ' GB';
-            
+
             // Convert string to a number to calculate color thresholds
             const ramVal = parseFloat(result);
-            
+
             // Change dot color based on how much RAM is used
             if (ramVal > 15.0) {
                 // High Memory - Red
-                ramDot.style.background = '#ef4444'; 
+                ramDot.style.background = '#ef4444';
                 ramDot.style.boxShadow = '0 0 6px rgba(239, 68, 68, 0.6)';
             } else if (ramVal > 8.0) {
                 // Medium Memory - Yellow
-                ramDot.style.background = '#eab308'; 
+                ramDot.style.background = '#eab308';
                 ramDot.style.boxShadow = '0 0 6px rgba(234, 179, 8, 0.6)';
             } else {
                 // Low Memory - Green
-                ramDot.style.background = '#4ade80'; 
+                ramDot.style.background = '#4ade80';
                 ramDot.style.boxShadow = '0 0 6px rgba(74, 222, 128, 0.6)';
             }
         }
@@ -846,7 +851,7 @@ setInterval(updateRAM, 3000); // Update automatically every 3 seconds
 
 // 2. Toggle the Modal Menu
 function togglePurgeMenu(e) {
-    if(e) e.stopPropagation(); // Prevents the click from triggering the document closer below
+    if (e) e.stopPropagation(); // Prevents the click from triggering the document closer below
     document.getElementById('purgeMenu').classList.toggle('hidden');
 }
 
@@ -855,33 +860,33 @@ function executePurge() {
     const btn = document.getElementById('purgeBtn');
     const originalHTML = btn.innerHTML;
     const csInterface = new CSInterface();
-    
+
     // Set visual loading state
     btn.innerHTML = 'Purging...';
-    
+
     // Talk to After Effects
-    csInterface.evalScript('purgeSniprrRAM()', function(result) {
+    csInterface.evalScript('purgeSniprrRAM()', function (result) {
         // Tiny timeout so the user has time to read "Purging..."
         setTimeout(() => {
             // Restore button text/icon
             btn.innerHTML = originalHTML;
-            
+
             // Close the menu automatically
             const menu = document.getElementById('purgeMenu');
             if (menu) menu.classList.add('hidden');
-            
+
             // Force an immediate UI update so they see the RAM drop instantly
             updateRAM();
-            
-        }, 600); 
+
+        }, 600);
     });
 }
 
 // 4. Global Click Listener to close menu when clicking outside
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
     const menu = document.getElementById('purgeMenu');
-    const trigger = document.getElementById('ramMonitorBtn'); 
-    
+    const trigger = document.getElementById('ramMonitorBtn');
+
     // If the menu is open, and they clicked outside both the menu and the button
     if (menu && !menu.classList.contains('hidden')) {
         if (!menu.contains(e.target) && (!trigger || !trigger.contains(e.target))) {
@@ -889,7 +894,9 @@ document.addEventListener('click', function(e) {
         }
     }
 });
+// --- SOLID COLOR MODAL LOGIC ---
 
+// Call this function when you click your main "Create Solid" button
 
 
 init();

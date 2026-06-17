@@ -375,72 +375,92 @@ function createLayer(type, colorHex, userLabel, doParent) {
 
 
 // 4. PRE-COMPOSE (Fixed: Explicit Renaming)
+// --- ADVANCED PRE-COMPOSE (Sniprr) ---
 function doPrecompose(individual, userLabel) {
     app.beginUndoGroup("Sniprr Pre-compose");
     var comp = app.project.activeItem;
+    
     if (!comp || !(comp instanceof CompItem) || comp.selectedLayers.length === 0) {
         app.endUndoGroup();
         return;
     }
 
-    var sel = comp.selectedLayers;
-
+    // HELPER: Fixed order of operations to prevent AE timeline crashes
     function trimPrecomp(compItem, newLayer, minIn, duration) {
-        compItem.duration = duration;
+        // Enforce a minimum duration of 1 frame so AE doesn't crash on 0-second durations
+        var safeDuration = Math.max(duration, compItem.frameDuration);
+        
+        // 1. Shift all layers to the start of the precomp FIRST
         for (var i = 1; i <= compItem.numLayers; i++) {
             var layer = compItem.layer(i);
             layer.startTime -= minIn;
         }
+        
+        // 2. NOW it is safe to trim the comp duration
+        compItem.duration = safeDuration;
+        
+        // 3. Re-align the precomp wrapper in the main timeline
         newLayer.startTime = minIn;
         newLayer.inPoint = minIn;
-        newLayer.outPoint = minIn + duration;
+        newLayer.outPoint = minIn + safeDuration;
     }
 
     if (individual) {
-        // Individual Mode
-        for (var i = 0; i < sel.length; i++) {
-            var layer = sel[i];
-            var idx = layer.index;
-            var inP = layer.inPoint;
-            var outP = layer.outPoint;
-            var dur = outP - inP;
+        // --- INDIVIDUAL MODE ---
+        // BUG FIX: Collect layer data into a static array first
+        var layerData = [];
+        for (var i = 0; i < comp.selectedLayers.length; i++) {
+            layerData.push({
+                index: comp.selectedLayers[i].index,
+                inP: comp.selectedLayers[i].inPoint,
+                outP: comp.selectedLayers[i].outPoint,
+                name: comp.selectedLayers[i].name
+            });
+        }
 
-            // Generate Name
-            var baseName = (userLabel && userLabel !== "") ? userLabel : layer.name;
-            var finalName = baseName + " Comp " + (i + 1);
+        // BUG FIX: Loop BACKWARDS so index shifting doesn't corrupt the timeline
+        for (var j = layerData.length - 1; j >= 0; j--) {
+            var data = layerData[j];
+            var dur = data.outP - data.inP;
 
-            var newComp = comp.layers.precompose([idx], finalName, true);
-            var newLayer = comp.selectedLayers[0]; // The new precomp layer
+            var baseName = (userLabel && userLabel !== "") ? userLabel : data.name;
+            var finalName = baseName + " Comp " + (j + 1);
 
-            // Rename the Layer inside the main comp
-            if (userLabel && userLabel !== "") newLayer.name = userLabel + " " + (i + 1);
+            // Precompose the specific index
+            var newComp = comp.layers.precompose([data.index], finalName, true);
+            var newLayer = comp.selectedLayers[0]; // AE automatically selects the new precomp
 
-            trimPrecomp(newComp, newLayer, inP, dur);
+            if (userLabel && userLabel !== "") newLayer.name = userLabel + " " + (j + 1);
+
+            trimPrecomp(newComp, newLayer, data.inP, dur);
         }
 
     } else {
-        // Group Mode
+        // --- GROUP MODE ---
         var indices = [];
         var minIn = 999999;
         var maxOut = -999999;
+        var sel = comp.selectedLayers;
 
-        for (var i = 0; i < sel.length; i++) {
-            indices.push(sel[i].index);
-            if (sel[i].inPoint < minIn) minIn = sel[i].inPoint;
-            if (sel[i].outPoint > maxOut) maxOut = sel[i].outPoint;
+        // Gather all indices and find the absolute min/max times
+        for (var k = 0; k < sel.length; k++) {
+            indices.push(sel[k].index);
+            if (sel[k].inPoint < minIn) minIn = sel[k].inPoint;
+            if (sel[k].outPoint > maxOut) maxOut = sel[k].outPoint;
         }
 
         var dur = maxOut - minIn;
         var pName = (userLabel && userLabel !== "") ? userLabel : "Pre-comp";
 
+        // Group precompose safely
         var newComp = comp.layers.precompose(indices, pName, true);
         var newLayer = comp.selectedLayers[0];
 
-        // Rename the Layer explicitly
         if (userLabel && userLabel !== "") newLayer.name = userLabel;
 
         trimPrecomp(newComp, newLayer, minIn, dur);
     }
+    
     app.endUndoGroup();
 }
 
@@ -1160,11 +1180,16 @@ function sniprrApplyPresetEase(type) {
 
 // Gets current AE Memory usage and converts bytes to Gigabytes (GB)
 // Get current RAM usage from After Effects
+// --- GET AE MEMORY ---
 function getSniprrRAM() {
     try {
-        var bytes = app.memoryInUse;
-        var gb = bytes / (1024 * 1024 * 1024);
-        return gb.toFixed(1); // Returns a string like "4.2"
+        // Force parse it as a float to prevent string concatenation bugs
+        var bytes = parseFloat(app.memoryInUse); 
+        if (isNaN(bytes) || bytes === 0) return "0.0";
+        
+        // Divide by exactly 1024^3 to get true Gigabytes
+        var gb = bytes / 1073741824; 
+        return gb.toFixed(1); 
     } catch (e) {
         return "0.0";
     }

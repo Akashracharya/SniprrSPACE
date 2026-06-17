@@ -446,26 +446,37 @@ body {
     backdrop-filter: blur(5px);
 }
 
+/* =========================================
+   SOLID COLOR SWATCH GRID
+   ========================================= */
+
+/* =========================================
+   SWATCH GRID DESIGN
+   ========================================= */
+
 .color-grid {
     display: grid;
-    grid-template-columns: repeat(3, 50px);
-    gap: 15px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 4px 0;
 }
 
 .color-swatch {
-    width: 50px;
-    height: 50px;
-    border-radius: 5px;
+    width: 100%;
+    aspect-ratio: 1/1; /* Keeps them perfect squares */
+    border-radius: 6px;
     cursor: pointer;
-    border: 2px solid rgba(255,255,255,0.2);
-    transition: transform 0.2s, border-color 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.4);
+    transition: all 0.15s ease;
+    position: relative;
 }
 
 .color-swatch:hover {
     transform: scale(1.15);
-    border-color: #fff;
-    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    border-color: #ffffff;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+    z-index: 2; 
 }
 
 .modal-close {
@@ -474,10 +485,6 @@ body {
     font-size: 12px;
     text-decoration: underline;
     margin-top: 10px;
-}
-
-.modal-close:hover {
-    color: #fff;
 }
 
 /* --- SIDEBAR (Asset Browser) --- */
@@ -2009,3 +2016,50 @@ button:focus,
     margin-top: 6px;
 }
 
+/* =========================================
+   GLASS OVERLAY & MODAL BASE
+   ========================================= */
+
+/* The dark background that covers the extension */
+.preset-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.preset-modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* The popup animation for the window */
+.preset-modal {
+    width: 240px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transform: translateY(0) scale(1);
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.preset-modal-overlay.hidden .preset-modal {
+    transform: translateY(-20px) scale(0.9);
+}
+
+/* Modal Title */
+.preset-modal-title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}

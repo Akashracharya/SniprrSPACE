@@ -39,7 +39,7 @@
         </header>
 
         <div class="content-area" id="browserView">
-            
+
             <main class="grid-container">
                 <div id="categoryNavBar" class="sfx-nav-bar"></div>
                 <div class="path-and-page-row">
@@ -125,7 +125,8 @@
 
                         <button class="tool-btn" onclick="runScript('applyExpression', 'timer')"
                             title="Stopwatch Timer (Use on Text Layer)">TMR</button>
-                        <button class="tool-btn" onclick="runScript('applyWhiteFill')" title="Apply White Fill Effect">FILL</button>
+                        <button class="tool-btn" onclick="runScript('applyWhiteFill')"
+                            title="Apply White Fill Effect">FILL</button>
 
                     </div>
                 </div>
@@ -278,20 +279,28 @@
                 </div>
 
             </div>
-            <div id="colorModal" class="color-modal hidden">
-                <div class="color-grid">
-                    <div class="color-swatch" style="background:#FFFFFF" data-col="#FFFFFF"></div>
-                    <div class="color-swatch" style="background:#000000" data-col="#000000"></div>
-                    <div class="color-swatch" style="background:#808080" data-col="#808080"></div>
-                    <div class="color-swatch" style="background:#FF0000" data-col="#FF0000"></div>
-                    <div class="color-swatch" style="background:#00FF00" data-col="#00FF00"></div>
-                    <div class="color-swatch" style="background:#0000FF" data-col="#0000FF"></div>
-                    <div class="color-swatch" style="background:#FFFF00" data-col="#FFFF00"></div>
-                    <div class="color-swatch" style="background:#00FFFF" data-col="#00FFFF"></div>
-                    <div class="color-swatch" style="background:#FF00FF" data-col="#FF00FF"></div>
+            <div id="colorModal" class="preset-modal-overlay hidden">
+                <div class="preset-modal glass-edge-panel">
+                    <p class="preset-modal-title">Select Solid Color</p>
+
+                    <div class="color-grid">
+                        <div class="color-swatch" style="background:#FFFFFF" data-col="#FFFFFF"></div>
+                        <div class="color-swatch" style="background:#000000" data-col="#000000"></div>
+                        <div class="color-swatch" style="background:#808080" data-col="#808080"></div>
+                        <div class="color-swatch" style="background:#FF0000" data-col="#FF0000"></div>
+                        <div class="color-swatch" style="background:#00FF00" data-col="#00FF00"></div>
+                        <div class="color-swatch" style="background:#0000FF" data-col="#0000FF"></div>
+                        <div class="color-swatch" style="background:#FFFF00" data-col="#FFFF00"></div>
+                        <div class="color-swatch" style="background:#00FFFF" data-col="#00FFFF"></div>
+                        <div class="color-swatch" style="background:#FF00FF" data-col="#FF00FF"></div>
+                    </div>
+
+                    <div class="preset-modal-actions">
+                        <button class="mini-btn" style="width: 100%; margin-top: 4px;" id="closeModal">CANCEL</button>
+                    </div>
                 </div>
-                <div class="modal-close" id="closeModal">Cancel</div>
             </div>
+            
 
         </div>
 
